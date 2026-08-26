@@ -1,0 +1,2686 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SIMASRA – Dashboard Asrama Kabupaten Deiyai</title>
+    <link rel="icon" href="asset/img/android-chrome-192x192.png" />
+    <link rel="stylesheet" href="asset/css/style.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        primarydark: '#1d4ed8'
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- QR: generate kartu anggota -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <!-- QR: scan kamera untuk presensi -->
+    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+</head>
+
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen" x-data="app"
+    @click="closeDropdowns($event)" x-cloak>
+
+    <!-- LOADER -->
+    <div id="page-loader">
+        <div class="text-center">
+            <div class="loader-ring mx-auto"></div>
+            <div class="mt-6">
+                <p class="text-white font-bold text-xl" style="font-family:'Plus Jakarta Sans',sans-serif">SIMASRA</p>
+                <p class="text-slate-400 text-sm mt-1">Asrama Kabupaten Deiyai · Jayapura</p>
+            </div>
+            <div class="loader-progress mx-auto mt-5">
+                <div class="loader-progress-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex h-screen overflow-hidden">
+
+        <!-- SIDEBAR -->
+        <aside x-show="sidebarOpen" x-transition:enter="transition ease-out duration-250"
+            x-transition:enter-start="-translate-x-full opacity-0" x-transition:enter-end="translate-x-0 opacity-100"
+            x-transition:leave="transition ease-in duration-200" x-transition:leave-start="translate-x-0 opacity-100"
+            x-transition:leave-end="-translate-x-full opacity-0"
+            class="fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-slate-800 md:static md:translate-x-0 flex flex-col shadow-xl md:shadow-none">
+
+            <!-- Brand -->
+            <div class="px-5 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="font-bold text-sm leading-tight" style="font-family:'Plus Jakarta Sans',sans-serif">
+                            SIMASRA</p>
+                        <p class="text-xs text-slate-400 leading-tight">Asrama Kab. Deiyai</p>
+                    </div>
+                </div>
+                <button @click="sidebarOpen=false" class="md:hidden text-slate-400 hover:text-slate-600 p-1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Nav -->
+            <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+                <p class="text-xs font-700 text-slate-400 uppercase tracking-widest px-3 mb-3">Menu Utama</p>
+                <button x-show="hasAccess('dashboard')" @click="setPage('dashboard')"
+                    :class="currentPage==='dashboard'?'active':''" class="nav-link">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    Dashboard
+                </button>
+                <button x-show="hasAccess('kartu')" @click="openKartuAnggota(myPenghuni)" class="nav-link">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 4a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 16a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1v-4zM15 4a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V4zM13 13h3m3 0h2m-8 4h2m2 0h4m-8-2v4m8-8v8" />
+                    </svg>
+                    Kartu Saya (QR)
+                </button>
+                <button x-show="hasAccess('penghuni')" @click="setPage('penghuni')"
+                    :class="currentPage==='penghuni'?'active':''" class="nav-link">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Data Penghuni
+                </button>
+                <button x-show="hasAccess('kamar')" @click="setPage('kamar')" :class="currentPage==='kamar'?'active':''"
+                    class="nav-link">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                    </svg>
+                    Manajemen Kamar
+                </button>
+                <button x-show="hasAccess('presensi')" @click="setPage('presensi')"
+                    :class="currentPage==='presensi'?'active':''" class="nav-link">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span x-text="currentRole==='penghuni' ? 'Presensi Saya' : 'Presensi'"></span>
+                </button>
+                <button x-show="hasAccess('izin')" @click="setPage('izin')" :class="currentPage==='izin'?'active':''"
+                    class="nav-link">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                    </svg>
+                    <span x-text="currentRole==='penghuni' ? 'Izin Saya' : 'Izin Keluar/Masuk'"></span>
+                    <span x-show="isAdminOrPembina() && izinMenungguCount>0" x-text="izinMenungguCount"
+                        class="ml-auto bg-amber-500 text-white text-[10px] font-700 px-1.5 py-0.5 rounded-full"></span>
+                </button>
+                <button x-show="hasAccess('pelanggaran')" @click="setPage('pelanggaran')"
+                    :class="currentPage==='pelanggaran'?'active':''" class="nav-link">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    Pelanggaran
+                </button>
+                <button x-show="hasAccess('aktivitas')" @click="setPage('aktivitas')"
+                    :class="currentPage==='aktivitas'?'active':''" class="nav-link">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Aktivitas Asrama
+                </button>
+                <button x-show="hasAccess('inventaris')" @click="setPage('inventaris')"
+                    :class="currentPage==='inventaris'?'active':''" class="nav-link">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                    Inventaris
+                </button>
+                <button x-show="hasAccess('laporan')" @click="setPage('laporan')"
+                    :class="currentPage==='laporan'?'active':''" class="nav-link">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Laporan
+                </button>
+
+                <template x-if="hasAccess('pengguna')">
+                    <div>
+                        <p class="text-xs font-700 text-slate-400 uppercase tracking-widest px-3 mb-3 mt-5">Administrasi
+                        </p>
+                        <button @click="setPage('pengguna')" :class="currentPage==='pengguna'?'active':''"
+                            class="nav-link">
+                            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4.5a4 4 0 100 8 4 4 0 000-8zM4 20a8 8 0 0116 0" />
+                            </svg>
+                            Manajemen Pengguna
+                        </button>
+                    </div>
+                </template>
+            </nav>
+
+            <!-- Reset & User -->
+            <div class="px-3 py-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                <button x-show="isAdmin()" @click="confirmResetAll()"
+                    class="nav-link text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm">
+                    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Reset Semua Data
+                </button>
+                <div class="flex items-center gap-3 px-2 py-2">
+                    <div
+                        class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs overflow-hidden flex-shrink-0">
+                        <img x-show="userProfile.photo" :src="userProfile.photo" class="w-full h-full object-cover">
+                        <span x-show="!userProfile.photo"
+                            x-text="userProfile.name?userProfile.name.charAt(0).toUpperCase():'R'"></span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-600 truncate" x-text="userProfile.name||'Richy Rizaldo'"></p>
+                        <p class="text-xs text-slate-400" x-text="ROLE_LABEL[currentRole]"></p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+
+            <!-- TOPBAR -->
+            <header
+                class="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 px-5 py-3.5 flex items-center justify-between flex-shrink-0 z-30">
+                <div class="flex items-center gap-4">
+                    <button @click="sidebarOpen=!sidebarOpen"
+                        class="text-slate-500 hover:text-slate-700 dark:text-slate-400 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                    <div>
+                        <h2 class="font-bold text-base leading-tight" style="font-family:'Plus Jakarta Sans',sans-serif"
+                            x-text="PAGE_TITLES[currentPage] || 'SIMASRA'">
+                        </h2>
+                        <p class="text-xs text-slate-400"
+                            x-text="new Date().toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'})">
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <!-- Notifikasi -->
+                    <div class="relative dropdown">
+                        <button @click="toggleNotifications()"
+                            class="p-2 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition relative">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+                            <span x-show="unreadNotifCount>0"
+                                class="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-700 flex items-center justify-center"
+                                x-text="unreadNotifCount>9?'9+':unreadNotifCount"></span>
+                        </button>
+                        <div x-show="notificationsOpen" x-transition
+                            class="absolute right-0 mt-2 w-80 card py-2 z-50 max-h-96 overflow-y-auto">
+                            <div class="px-4 py-2 flex items-center justify-between">
+                                <p class="text-xs font-700 text-slate-500 uppercase tracking-wider">Notifikasi</p>
+                                <button x-show="unreadNotifCount>0" @click="tandaiSemuaDibaca()"
+                                    class="text-[11px] text-blue-600 hover:underline">Tandai semua dibaca</button>
+                            </div>
+                            <template x-for="n in notifikasiUntukSaya.slice(0,15)" :key="n.id">
+                                <div @click="bukaNotifikasi(n)"
+                                    class="px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm border-t border-slate-100 dark:border-slate-700 cursor-pointer flex gap-2.5">
+                                    <span class="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0"
+                                        :class="n.dibaca ? 'bg-transparent' : 'bg-blue-500'"></span>
+                                    <div class="min-w-0">
+                                        <p class="font-600 truncate" x-text="n.judul"></p>
+                                        <p class="text-xs text-slate-500 line-clamp-2" x-text="n.pesan"></p>
+                                        <p class="text-[11px] text-slate-400 mt-1" x-text="waktuRelatif(n.waktu)"></p>
+                                    </div>
+                                </div>
+                            </template>
+                            <div x-show="notifikasiUntukSaya.length===0"
+                                class="px-4 py-8 text-center text-slate-400 text-sm">
+                                Belum ada notifikasi</div>
+                        </div>
+                    </div>
+
+                    <!-- Dark Mode -->
+                    <button @click="toggleDarkMode()"
+                        class="p-2 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                        <svg x-show="!darkMode" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                        <svg x-show="darkMode" class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z" />
+                        </svg>
+                    </button>
+
+                    <!-- Profile -->
+                    <div class="relative dropdown">
+                        <button @click="toggleProfile()"
+                            class="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                            <div
+                                class="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold overflow-hidden">
+                                <img x-show="userProfile.photo" :src="userProfile.photo"
+                                    class="w-full h-full object-cover">
+                                <span x-show="!userProfile.photo"
+                                    x-text="userProfile.name?userProfile.name.charAt(0).toUpperCase():'R'"></span>
+                            </div>
+                            <span class="text-sm font-500 hidden sm:block"
+                                x-text="userProfile.name||'Richy Rizaldo'"></span>
+                        </button>
+                        <div x-show="profileOpen" x-transition class="absolute right-0 mt-2 w-44 card py-1 z-50">
+                            <button @click="openProfileModal('profile')"
+                                class="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 dark:hover:bg-slate-800">Profil
+                                Saya</button>
+                            <button @click="openProfileModal('settings')"
+                                class="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-50 dark:hover:bg-slate-800">Pengaturan</button>
+                            <button @click="handleLogout()"
+                                class="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-slate-50 dark:hover:bg-slate-800">Keluar</button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- PAGE CONTENT -->
+            <main class="flex-1 overflow-y-auto p-5 space-y-6">
+
+                <!-- DASHBOARD -->
+                <section x-show="currentPage==='dashboard'" x-cloak class="space-y-6 fade-in">
+
+                    <!-- ═══ DASHBOARD PERSONAL – ROLE PENGHUNI ═══ -->
+                    <template x-if="currentRole==='penghuni'">
+                        <div class="space-y-6">
+                            <div
+                                class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 p-6 text-white">
+                                <div class="relative">
+                                    <p class="text-blue-100 text-sm font-500 mb-1">Selamat datang 👋</p>
+                                    <h1 class="text-2xl font-800 mb-1"
+                                        style="font-family:'Plus Jakarta Sans',sans-serif"
+                                        x-text="myPenghuni?.nama || userProfile.name"></h1>
+                                    <p class="text-blue-100 text-sm"
+                                        x-text="myPenghuni ? (myPenghuni.distrik+' · '+myPenghuni.jenjang) : 'Penghuni Asrama Kabupaten Deiyai'">
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- QR Presensi Saya — tampil langsung di dashboard, tidak perlu buka menu lain -->
+                            <div class="card p-6 flex flex-col sm:flex-row items-center gap-6">
+                                <div id="qr-dashboard-penghuni"
+                                    class="flex-shrink-0 p-3 bg-white rounded-xl border border-slate-200"></div>
+                                <div class="text-center sm:text-left flex-1">
+                                    <h3 class="font-700 text-base mb-1"
+                                        style="font-family:'Plus Jakarta Sans',sans-serif">QR Presensi Saya</h3>
+                                    <p class="text-sm text-slate-500 mb-4">Tunjukkan QR ini ke petugas / kamera di
+                                        gerbang setiap kali masuk dan keluar asrama. QR ini otomatis mengikuti data
+                                        dirimu di sistem.</p>
+                                    <button @click="downloadKartu('qr-dashboard-penghuni', currentNik)"
+                                        class="btn btn-primary">
+                                        <i class="fas fa-download"></i> Unduh QR
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div class="stat-card">
+                                    <div class="stat-card-glow bg-emerald-500"></div>
+                                    <p class="text-3xl font-800" style="font-family:'Plus Jakarta Sans',sans-serif"
+                                        x-text="persentaseKehadiranPenghuni(currentNik)+'%'"></p>
+                                    <p class="text-sm text-slate-500 mt-1">Persentase Kehadiran</p>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-card-glow bg-amber-500"></div>
+                                    <p class="text-3xl font-800" style="font-family:'Plus Jakarta Sans',sans-serif"
+                                        x-text="izin.filter(i=>i.nik===currentNik).length"></p>
+                                    <p class="text-sm text-slate-500 mt-1">Total Pengajuan Izin</p>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-card-glow bg-blue-500"></div>
+                                    <p class="text-3xl font-800" style="font-family:'Plus Jakarta Sans',sans-serif"
+                                        x-text="getKamarSaatIni(myPenghuni) || '—'"></p>
+                                    <p class="text-sm text-slate-500 mt-1">Kamar Saat Ini</p>
+                                </div>
+                            </div>
+
+                            <div class="card p-6">
+                                <h3 class="font-700 text-base mb-4" style="font-family:'Plus Jakarta Sans',sans-serif">
+                                    Riwayat Presensi Terakhir</h3>
+                                <div class="space-y-2">
+                                    <template x-for="r in presensi.filter(x=>x.nik===currentNik).slice(0,6)"
+                                        :key="r.id">
+                                        <div
+                                            class="flex items-center justify-between text-sm py-2 border-b border-slate-100 dark:border-slate-800 last:border-0">
+                                            <span class="font-500"
+                                                x-text="new Date(r.tanggal).toLocaleDateString('id-ID',{weekday:'short',day:'numeric',month:'short'})"></span>
+                                            <span class="text-slate-500"
+                                                x-text="'Masuk '+(r.jamMasuk||'-')+' · Keluar '+(r.jamKeluar||'-')"></span>
+                                            <span class="badge"
+                                                :class="r.statusMasuk==='terlambat'?'badge-penuh':'badge-kosong'"
+                                                x-text="r.statusMasuk==='terlambat'?'Terlambat':'Tepat Waktu'"></span>
+                                        </div>
+                                    </template>
+                                    <div x-show="presensi.filter(x=>x.nik===currentNik).length===0"
+                                        class="text-center py-6 text-slate-400 text-sm">Belum ada riwayat presensi</div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- ═══ DASHBOARD ADMIN / PEMBINA / PIMPINAN ═══ -->
+                    <template x-if="currentRole!=='penghuni'">
+                        <div class="space-y-6">
+                            <!-- Hero Banner -->
+                            <div
+                                class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 p-6 text-white">
+                                <div class="absolute inset-0 opacity-10"
+                                    style="background:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2220%22 cy=%2220%22 r=%2215%22 fill=%22white%22/><circle cx=%2280%22 cy=%2280%22 r=%2220%22 fill=%22white%22/><circle cx=%2260%22 cy=%2210%22 r=%228%22 fill=%22white%22/></svg>') center/cover">
+                                </div>
+                                <div class="relative">
+                                    <p class="text-blue-100 text-sm font-500 mb-1">Selamat datang kembali 👋</p>
+                                    <h1 class="text-2xl font-800 mb-1"
+                                        style="font-family:'Plus Jakarta Sans',sans-serif"
+                                        x-text="userProfile.name||'Richy Rizaldo'"></h1>
+                                    <p class="text-blue-100 text-sm">Sistem Informasi Manajemen Asrama Kabupaten Deiyai
+                                        · Kota
+                                        Studi Jayapura</p>
+                                </div>
+                                <div class="absolute bottom-0 right-6 text-right hidden sm:block">
+                                    <p class="text-blue-100 text-xs"
+                                        x-text="new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'})">
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Stat Cards -->
+                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div class="stat-card">
+                                    <div class="stat-card-glow bg-blue-500"></div>
+                                    <div class="flex items-start justify-between mb-3">
+                                        <div
+                                            class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            </svg>
+                                        </div>
+                                        <span
+                                            class="text-xs font-600 text-green-600 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-full">Aktif</span>
+                                    </div>
+                                    <p class="text-3xl font-800 text-slate-800 dark:text-white"
+                                        style="font-family:'Plus Jakarta Sans',sans-serif" x-text="penghuniAktif"></p>
+                                    <p class="text-sm text-slate-500 mt-1">Penghuni Aktif</p>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-card-glow bg-emerald-500"></div>
+                                    <div class="flex items-start justify-between mb-3">
+                                        <div
+                                            class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                                            </svg>
+                                        </div>
+                                        <span class="text-xs font-600 px-2 py-1 rounded-full"
+                                            :class="hunianPersen<80?'text-green-600 bg-green-50 dark:bg-green-900/30':hunianPersen<95?'text-yellow-600 bg-yellow-50 dark:bg-yellow-900/30':'text-red-600 bg-red-50 dark:bg-red-900/30'"
+                                            x-text="hunianPersen<80?'Aman':hunianPersen<95?'Padat':'Penuh'"></span>
+                                    </div>
+                                    <p class="text-3xl font-800 text-slate-800 dark:text-white"
+                                        style="font-family:'Plus Jakarta Sans',sans-serif" x-text="hunianPersen+'%'">
+                                    </p>
+                                    <p class="text-sm text-slate-500 mt-1">Tingkat Hunian</p>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-card-glow bg-violet-500"></div>
+                                    <div class="flex items-start justify-between mb-3">
+                                        <div
+                                            class="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-violet-600" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                            </svg>
+                                        </div>
+                                        <span
+                                            class="text-xs font-600 text-violet-600 bg-violet-50 dark:bg-violet-900/30 px-2 py-1 rounded-full"
+                                            x-text="totalBarak+' Barak'"></span>
+                                    </div>
+                                    <p class="text-3xl font-800 text-slate-800 dark:text-white"
+                                        style="font-family:'Plus Jakarta Sans',sans-serif" x-text="totalKamarComputed">
+                                    </p>
+                                    <p class="text-sm text-slate-500 mt-1">Total Kamar</p>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-card-glow bg-amber-500"></div>
+                                    <div class="flex items-start justify-between mb-3">
+                                        <div
+                                            class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+                                        <span
+                                            class="text-xs font-600 text-amber-600 bg-amber-50 dark:bg-amber-900/30 px-2 py-1 rounded-full">Tersedia</span>
+                                    </div>
+                                    <p class="text-3xl font-800 text-slate-800 dark:text-white"
+                                        style="font-family:'Plus Jakarta Sans',sans-serif" x-text="kamarKosong"></p>
+                                    <p class="text-sm text-slate-500 mt-1">Kamar Kosong</p>
+                                </div>
+                            </div>
+
+                            <!-- Scan Presensi QR — tertanam langsung di dashboard, tidak perlu buka menu lain -->
+                            <div x-show="isAdminOrPembina()" class="card p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div>
+                                        <h3 class="font-700 text-base"
+                                            style="font-family:'Plus Jakarta Sans',sans-serif">Scan Presensi QR</h3>
+                                        <p class="text-sm text-slate-400 mt-0.5">Kamera siap sepanjang dashboard ini
+                                            terbuka — penghuni tinggal tunjukkan QR mereka</p>
+                                    </div>
+                                    <button @click="toggleDashboardScanner()" class="btn"
+                                        :class="dashboardScannerActive?'btn-danger':'btn-primary'">
+                                        <i class="fas" :class="dashboardScannerActive?'fa-stop':'fa-qrcode'"></i>
+                                        <span
+                                            x-text="dashboardScannerActive?'Hentikan Kamera':'Nyalakan Kamera'"></span>
+                                    </button>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    <div>
+                                        <div id="qr-reader-dashboard" x-show="dashboardScannerActive"
+                                            style="width:100%;border-radius:12px;overflow:hidden;background:#0f172a;min-height:220px;">
+                                        </div>
+                                        <div x-show="!dashboardScannerActive"
+                                            class="flex flex-col items-center justify-center py-12 text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl">
+                                            <i class="fas fa-qrcode text-3xl mb-2 opacity-30"></i>
+                                            <p class="text-sm">Klik "Nyalakan Kamera" untuk mulai presensi</p>
+                                        </div>
+                                        <div x-show="scanFeedback" x-transition
+                                            class="mt-3 rounded-xl px-4 py-3 text-sm font-500 flex items-center gap-2"
+                                            :class="scanFeedback && scanFeedback.type==='success' ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400' : scanFeedback && scanFeedback.type==='error' ? 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400' : 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'">
+                                            <i class="fas"
+                                                :class="scanFeedback && scanFeedback.type==='success' ? 'fa-circle-check' : scanFeedback && scanFeedback.type==='error' ? 'fa-circle-exclamation' : 'fa-circle-info'"></i>
+                                            <span x-text="scanFeedback ? scanFeedback.text : ''"></span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-700 text-slate-400 uppercase tracking-wider mb-2">
+                                            Presensi Hari Ini (<span x-text="presensiHariIni.length"></span>)</p>
+                                        <div class="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+                                            <template x-for="r in [...presensiHariIni].reverse()" :key="r.id">
+                                                <div
+                                                    class="flex items-center justify-between text-sm py-2 px-3 rounded-lg bg-slate-50 dark:bg-slate-800">
+                                                    <span class="font-500 truncate"
+                                                        x-text="namaPenghuniByNik(r.nik)"></span>
+                                                    <span class="text-xs text-slate-400 whitespace-nowrap ml-2"
+                                                        x-text="(r.jamMasuk||'-')+(r.jamKeluar?(' → '+r.jamKeluar):'')"></span>
+                                                </div>
+                                            </template>
+                                            <div x-show="presensiHariIni.length===0"
+                                                class="text-center py-10 text-slate-400 text-sm">Belum ada presensi hari
+                                                ini</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stat Cards: Presensi/Izin/Pelanggaran Hari Ini -->
+                            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div class="stat-card">
+                                    <div class="stat-card-glow bg-green-500"></div>
+                                    <p class="text-3xl font-800 text-slate-800 dark:text-white"
+                                        style="font-family:'Plus Jakarta Sans',sans-serif" x-text="hadirHariIni"></p>
+                                    <p class="text-sm text-slate-500 mt-1">Hadir Hari Ini <span
+                                            class="text-xs text-slate-400"
+                                            x-text="'('+persenKehadiranHariIni+'%)'"></span></p>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-card-glow bg-amber-500"></div>
+                                    <p class="text-3xl font-800 text-slate-800 dark:text-white"
+                                        style="font-family:'Plus Jakarta Sans',sans-serif" x-text="izinHariIniCount">
+                                    </p>
+                                    <p class="text-sm text-slate-500 mt-1">Sedang Izin</p>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-card-glow bg-red-500"></div>
+                                    <p class="text-3xl font-800 text-slate-800 dark:text-white"
+                                        style="font-family:'Plus Jakarta Sans',sans-serif" x-text="tidakHadirHariIni">
+                                    </p>
+                                    <p class="text-sm text-slate-500 mt-1">Tidak Hadir</p>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-card-glow bg-rose-500"></div>
+                                    <p class="text-3xl font-800 text-slate-800 dark:text-white"
+                                        style="font-family:'Plus Jakarta Sans',sans-serif"
+                                        x-text="pelanggaranAktifCount"></p>
+                                    <p class="text-sm text-slate-500 mt-1">Pelanggaran Aktif</p>
+                                </div>
+                            </div>
+
+                            <!-- Charts -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div class="card p-6">
+                                    <h3 class="font-700 text-base mb-1"
+                                        style="font-family:'Plus Jakarta Sans',sans-serif">
+                                        Grafik Kehadiran 7 Hari Terakhir</h3>
+                                    <p class="text-sm text-slate-400 mb-5">Jumlah penghuni check-in per hari</p>
+                                    <div class="chart-wrap" style="max-width:100%"><canvas id="chart-kehadiran-mingguan"
+                                            height="220"></canvas></div>
+                                </div>
+                                <div class="card p-6">
+                                    <h3 class="font-700 text-base mb-1"
+                                        style="font-family:'Plus Jakarta Sans',sans-serif">
+                                        Status Penghuni</h3>
+                                    <p class="text-sm text-slate-400 mb-5">Distribusi status seluruh penghuni</p>
+                                    <div x-show="penghuni.length > 0">
+                                        <div class="chart-wrap"><canvas id="chart-status-penghuni"
+                                                height="260"></canvas></div>
+                                    </div>
+                                    <div x-show="penghuni.length === 0"
+                                        class="flex flex-col items-center justify-center py-12 text-slate-400">
+                                        <svg class="w-12 h-12 mb-3 opacity-30" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                        </svg>
+                                        <p class="text-sm">Belum ada data</p>
+                                    </div>
+                                </div>
+                                <div class="card p-6">
+                                    <h3 class="font-700 text-base mb-1"
+                                        style="font-family:'Plus Jakarta Sans',sans-serif">
+                                        Hunian Kamar</h3>
+                                    <p class="text-sm text-slate-400 mb-5">Persentase kamar terisi vs kosong</p>
+                                    <div x-show="totalKamarComputed > 0">
+                                        <div class="chart-wrap"><canvas id="chart-hunian-barak" height="260"></canvas>
+                                        </div>
+                                    </div>
+                                    <div x-show="totalKamarComputed === 0"
+                                        class="flex flex-col items-center justify-center py-12 text-slate-400">
+                                        <svg class="w-12 h-12 mb-3 opacity-30" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                                d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                                        </svg>
+                                        <p class="text-sm">Belum ada barak</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Distrik & Aktivitas -->
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                                <div class="card p-6">
+                                    <h3 class="font-700 text-base mb-4"
+                                        style="font-family:'Plus Jakarta Sans',sans-serif">
+                                        Penghuni per Distrik (Top 5)</h3>
+                                    <div class="space-y-3">
+                                        <template x-for="(item,idx) in laporanDistrik.slice(0,5)" :key="idx">
+                                            <div>
+                                                <div class="flex justify-between text-sm mb-1.5">
+                                                    <span class="font-500" x-text="item.distrik"></span>
+                                                    <span class="text-slate-500" x-text="item.jumlah+' orang'"></span>
+                                                </div>
+                                                <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2">
+                                                    <div class="h-2 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-700"
+                                                        :style="{width: penghuniAktif>0 ? Math.round((item.jumlah/penghuniAktif)*100)+'%' : '0%'}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                        <div x-show="laporanDistrik.length===0"
+                                            class="text-center py-8 text-slate-400 text-sm">
+                                            Belum ada data penghuni aktif</div>
+                                    </div>
+                                </div>
+                                <div class="card p-6">
+                                    <h3 class="font-700 text-base mb-4 flex items-center justify-between"
+                                        style="font-family:'Plus Jakarta Sans',sans-serif">
+                                        <span>Aktivitas Terbaru</span>
+                                        <button x-show="isAdmin()" @click="buatPengumuman()"
+                                            class="text-xs text-blue-600 hover:underline font-500">+ Pengumuman</button>
+                                    </h3>
+                                    <div class="space-y-3 max-h-72 overflow-y-auto pr-1">
+                                        <template x-for="n in notifikasiUntukSaya.slice(0,8)" :key="n.id">
+                                            <div class="flex items-start gap-3">
+                                                <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                                                    :class="n.tipe==='izin'?'bg-blue-100 dark:bg-blue-900/30':n.tipe==='telat'?'bg-red-100 dark:bg-red-900/30':n.tipe==='pelanggaran'?'bg-rose-100 dark:bg-rose-900/30':n.tipe==='presensi'?'bg-amber-100 dark:bg-amber-900/30':'bg-green-100 dark:bg-green-900/30'">
+                                                    <i class="fas text-xs"
+                                                        :class="n.tipe==='izin'?'fa-right-from-bracket text-blue-600':n.tipe==='telat'?'fa-clock text-red-600':n.tipe==='pelanggaran'?'fa-triangle-exclamation text-rose-600':n.tipe==='presensi'?'fa-qrcode text-amber-600':'fa-bullhorn text-green-600'"></i>
+                                                </div>
+                                                <div class="min-w-0">
+                                                    <p class="text-sm font-500 truncate" x-text="n.judul"></p>
+                                                    <p class="text-xs text-slate-400 mt-0.5"
+                                                        x-text="waktuRelatif(n.waktu)"></p>
+                                                </div>
+                                            </div>
+                                        </template>
+                                        <div x-show="notifikasiUntukSaya.length===0"
+                                            class="text-center py-8 text-slate-400 text-sm">Belum ada aktivitas</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </section>
+
+                <!-- ═══ DATA PENGHUNI ═══ -->
+                <section x-show="currentPage==='penghuni'" x-cloak class="space-y-5 fade-in">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <h3 class="font-800 text-xl" style="font-family:'Plus Jakarta Sans',sans-serif">Data
+                                Penghuni Asrama</h3>
+                            <p class="text-sm text-slate-400 mt-0.5"
+                                x-text="penghuni.length+' total penghuni terdaftar'"></p>
+                        </div>
+                        <button @click="openAddModal()" class="btn btn-primary">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4v16m8-8H4" />
+                            </svg>
+                            Tambah Penghuni
+                        </button>
+                    </div>
+
+                    <!-- Filter -->
+                    <div class="card p-5">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                            <div class="lg:col-span-2">
+                                <label
+                                    class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Pencarian</label>
+                                <input type="text" x-model="searchQuery" placeholder="NIK, nama, distrik..."
+                                    class="form-input">
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Jenjang</label>
+                                <select x-model="filterJenjang" class="form-input">
+                                    <option value="">Semua</option>
+                                    <option value="SMA">SMA/SMK/MA</option>
+                                    <option value="Mahasiswa">Mahasiswa</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Tahun
+                                    Masuk</label>
+                                <select x-model="filterTahun" class="form-input">
+                                    <option value="">Semua</option>
+                                    <template x-for="y in availableYears">
+                                        <option :value="y" x-text="y"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Status</label>
+                                <select x-model="filterStatus" class="form-input">
+                                    <option value="">Semua</option>
+                                    <option value="aktif">Aktif</option>
+                                    <option value="keluar">Keluar</option>
+                                    <option value="alumni">Alumni</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabel -->
+                    <div class="card overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full data-table">
+                                <thead>
+                                    <tr>
+                                        <th class="text-left">No</th>
+                                        <th class="text-left">NIK</th>
+                                        <th class="text-left">Nama Lengkap</th>
+                                        <th class="text-left">Kamar Saat Ini</th>
+                                        <th class="text-left">Jenjang</th>
+                                        <th class="text-center">Tahun</th>
+                                        <th class="text-left">Distrik</th>
+                                        <th class="text-left">Status</th>
+                                        <th class="text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                                    <template x-for="(p,idx) in filteredPenghuni" :key="p.nik">
+                                        <tr>
+                                            <td class="px-4 py-3.5 text-sm text-slate-400"
+                                                x-text="idx+1+(currentPageTable-1)*itemsPerPage"></td>
+                                            <td class="px-4 py-3.5 text-xs font-mono text-slate-500" x-text="p.nik">
+                                            </td>
+                                            <td class="px-4 py-3.5 font-600 text-sm" x-text="p.nama"></td>
+                                            <td class="px-4 py-3.5 text-sm text-slate-500"
+                                                x-text="getKamarSaatIni(p)||'—'"></td>
+                                            <td class="px-4 py-3.5 text-sm text-slate-500" x-text="p.jenjang"></td>
+                                            <td class="px-4 py-3.5 text-sm text-center text-slate-500"
+                                                x-text="p.tahun_masuk"></td>
+                                            <td class="px-4 py-3.5 text-sm text-slate-500" x-text="p.distrik||'—'"></td>
+                                            <td class="px-4 py-3.5">
+                                                <span class="badge"
+                                                    :class="p.status==='aktif'?'badge-aktif':p.status==='keluar'?'badge-keluar':'badge-alumni'"
+                                                    x-text="p.status"></span>
+                                            </td>
+                                            <td class="px-4 py-3.5 text-center">
+                                                <div class="flex items-center justify-center gap-2">
+                                                    <button @click="openEditModal(p)"
+                                                        class="p-1.5 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition"
+                                                        title="Edit">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                        </svg>
+                                                    </button>
+                                                    <button @click="showRiwayat(p)"
+                                                        class="p-1.5 text-violet-500 hover:bg-violet-50 dark:hover:bg-violet-900/30 rounded-lg transition"
+                                                        title="Riwayat">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                    <tr x-show="filteredPenghuni.length===0">
+                                        <td colspan="9" class="px-4 py-16 text-center text-slate-400 text-sm">Tidak ada
+                                            data yang sesuai</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div x-show="filteredPenghuniAll.length > itemsPerPage"
+                            class="px-5 py-4 flex items-center justify-between border-t border-slate-100 dark:border-slate-800 text-sm">
+                            <p class="text-slate-500">Halaman <strong x-text="currentPageTable"></strong> dari <strong
+                                    x-text="Math.ceil(filteredPenghuniAll.length/itemsPerPage)"></strong></p>
+                            <div class="flex gap-2">
+                                <button @click="currentPageTable--" :disabled="currentPageTable===1"
+                                    class="btn btn-ghost py-1.5 px-3 text-xs disabled:opacity-40">← Sebelumnya</button>
+                                <button @click="currentPageTable++"
+                                    :disabled="currentPageTable*itemsPerPage>=filteredPenghuniAll.length"
+                                    class="btn btn-ghost py-1.5 px-3 text-xs disabled:opacity-40">Selanjutnya →</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ═══ MANAJEMEN KAMAR ═══ -->
+                <section x-show="currentPage==='kamar'" x-cloak class="space-y-5 fade-in">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <h3 class="font-800 text-xl" style="font-family:'Plus Jakarta Sans',sans-serif">Manajemen
+                                Kamar Barak</h3>
+                            <p class="text-sm text-slate-400 mt-0.5" x-text="barak.length+' barak terdaftar'"></p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button @click="openAssignModal(null)"
+                                class="btn bg-emerald-600 text-white hover:bg-emerald-700">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                                </svg>
+                                Assign Penghuni
+                            </button>
+                            <button @click="openAddBarakModal()" class="btn btn-primary">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 4v16m8-8H4" />
+                                </svg>
+                                Tambah Barak
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Statistik & Filter -->
+                    <div class="card p-5">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 items-center">
+                            <div>
+                                <label
+                                    class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Filter
+                                    Status</label>
+                                <select x-model="filterStatusKamar" class="form-input">
+                                    <option value="">Semua Status</option>
+                                    <option value="kosong">Kosong</option>
+                                    <option value="terisi_sebagian">Terisi Sebagian</option>
+                                    <option value="penuh">Penuh</option>
+                                    <option value="maintenance">Maintenance</option>
+                                </select>
+                            </div>
+                            <div class="grid grid-cols-4 gap-3 text-center">
+                                <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-3">
+                                    <p class="text-2xl font-800 text-blue-600"
+                                        style="font-family:'Plus Jakarta Sans',sans-serif" x-text="totalBarak"></p>
+                                    <p class="text-xs text-slate-500 mt-1">Total Barak</p>
+                                </div>
+                                <div class="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-3">
+                                    <p class="text-2xl font-800 text-emerald-600"
+                                        style="font-family:'Plus Jakarta Sans',sans-serif" x-text="barakTerisi"></p>
+                                    <p class="text-xs text-slate-500 mt-1">Terisi</p>
+                                </div>
+                                <div class="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-3">
+                                    <p class="text-2xl font-800 text-amber-600"
+                                        style="font-family:'Plus Jakarta Sans',sans-serif" x-text="barakKosong"></p>
+                                    <p class="text-xs text-slate-500 mt-1">Kosong</p>
+                                </div>
+                                <div class="bg-violet-50 dark:bg-violet-900/20 rounded-xl p-3">
+                                    <p class="text-2xl font-800 text-violet-600"
+                                        style="font-family:'Plus Jakarta Sans',sans-serif" x-text="totalKamarComputed">
+                                    </p>
+                                    <p class="text-xs text-slate-500 mt-1">Total Kamar</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabel Barak -->
+                    <div class="card overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full data-table">
+                                <thead>
+                                    <tr>
+                                        <th class="text-left">No</th>
+                                        <th class="text-left">Lantai</th>
+                                        <th class="text-left">Nama Barak / Sisi</th>
+                                        <th class="text-left">Rentang Kamar</th>
+                                        <th class="text-center">Kapasitas</th>
+                                        <th class="text-center">Terisi</th>
+                                        <th class="text-left">Status</th>
+                                        <th class="text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                                    <template x-for="(b,idx) in filteredBarak" :key="b.id">
+                                        <tr>
+                                            <td class="px-4 py-3.5 text-sm text-slate-400"
+                                                x-text="idx+1+(currentPageKamar-1)*itemsPerPageKamar"></td>
+                                            <td class="px-4 py-3.5 text-sm font-600 text-center" x-text="b.lantai"></td>
+                                            <td class="px-4 py-3.5 font-600 text-sm" x-text="b.sisi"></td>
+                                            <td class="px-4 py-3.5 text-sm text-slate-500 font-mono"
+                                                x-text="b.rentangKamar"></td>
+                                            <td class="px-4 py-3.5 text-sm text-center font-700" x-text="b.kapasitas">
+                                            </td>
+                                            <td class="px-4 py-3.5 text-sm text-center">
+                                                <span class="font-700"
+                                                    :class="b.terisi>=b.kapasitas?'text-red-500':b.terisi>0?'text-blue-500':'text-slate-400'"
+                                                    x-text="b.terisi"></span>
+                                            </td>
+                                            <td class="px-4 py-3.5">
+                                                <span class="badge" :class="{
+                                            'badge-kosong':b.status==='kosong',
+                                            'badge-terisi':b.status==='terisi_sebagian',
+                                            'badge-penuh':b.status==='penuh',
+                                            'badge-maintenance':b.status==='maintenance'
+                                        }" x-text="b.status.replace('_',' ').replace(/\b\w/g,l=>l.toUpperCase())"></span>
+                                            </td>
+                                            <td class="px-4 py-3.5">
+                                                <div class="flex items-center justify-center gap-1.5">
+                                                    <button @click="openDetailKamarModal(b)"
+                                                        class="p-1.5 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition"
+                                                        title="Detail">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                        </svg>
+                                                    </button>
+                                                    <button @click="openAssignModal(b)"
+                                                        :disabled="b.status==='penuh'||b.status==='maintenance'||assigning"
+                                                        class="p-1.5 text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-lg transition disabled:opacity-40 disabled:cursor-not-allowed"
+                                                        title="Assign">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                                                        </svg>
+                                                    </button>
+                                                    <button @click="showRiwayatKamar(b)"
+                                                        class="p-1.5 text-violet-500 hover:bg-violet-50 dark:hover:bg-violet-900/30 rounded-lg transition"
+                                                        title="Riwayat">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                    </button>
+                                                    <button @click="openEditBarakModal(b)"
+                                                        class="p-1.5 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition"
+                                                        title="Edit Barak">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                        </svg>
+                                                    </button>
+                                                    <button @click="deleteBarak(b)"
+                                                        class="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition"
+                                                        title="Hapus">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                    <tr x-show="filteredBarak.length===0">
+                                        <td colspan="8" class="px-4 py-16 text-center text-slate-400 text-sm">Tidak ada
+                                            barak yang sesuai</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div x-show="filteredBarakAll.length > itemsPerPageKamar"
+                            class="px-5 py-4 flex items-center justify-between border-t border-slate-100 dark:border-slate-800 text-sm">
+                            <p class="text-slate-500">Halaman <strong x-text="currentPageKamar"></strong> dari <strong
+                                    x-text="Math.ceil(filteredBarakAll.length/itemsPerPageKamar)"></strong></p>
+                            <div class="flex gap-2">
+                                <button @click="currentPageKamar--" :disabled="currentPageKamar===1"
+                                    class="btn btn-ghost py-1.5 px-3 text-xs disabled:opacity-40">← Sebelumnya</button>
+                                <button @click="currentPageKamar++"
+                                    :disabled="currentPageKamar*itemsPerPageKamar>=filteredBarakAll.length"
+                                    class="btn btn-ghost py-1.5 px-3 text-xs disabled:opacity-40">Selanjutnya →</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ═══ PRESENSI ═══ -->
+                <section x-show="currentPage==='presensi'" x-cloak class="space-y-5 fade-in">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <h3 class="font-800 text-xl" style="font-family:'Plus Jakarta Sans',sans-serif"
+                                x-text="currentRole==='penghuni' ? 'Presensi Saya' : 'Presensi & Kehadiran'"></h3>
+                            <p class="text-sm text-slate-400 mt-0.5">Check-in / check-out penghuni menggunakan QR Code
+                                atau input manual</p>
+                        </div>
+                        <div x-show="isAdminOrPembina()" class="flex gap-2">
+                            <button @click="openScanner()" class="btn btn-primary">
+                                <i class="fas fa-qrcode"></i> Scan QR Presensi
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Ringkasan hari ini -->
+                    <div x-show="isAdminOrPembina()" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="stat-card">
+                            <div class="stat-card-glow bg-green-500"></div>
+                            <p class="text-2xl font-800" x-text="hadirHariIni"></p>
+                            <p class="text-sm text-slate-500 mt-1">Hadir Hari Ini</p>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-glow bg-amber-500"></div>
+                            <p class="text-2xl font-800" x-text="izinHariIniCount"></p>
+                            <p class="text-sm text-slate-500 mt-1">Sedang Izin</p>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-glow bg-red-500"></div>
+                            <p class="text-2xl font-800" x-text="tidakHadirHariIni"></p>
+                            <p class="text-sm text-slate-500 mt-1">Tidak Hadir</p>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-glow bg-blue-500"></div>
+                            <p class="text-2xl font-800" x-text="persenKehadiranHariIni+'%'"></p>
+                            <p class="text-sm text-slate-500 mt-1">Persentase Kehadiran</p>
+                        </div>
+                    </div>
+
+                    <!-- Input manual (fallback tanpa kamera) -->
+                    <div x-show="isAdminOrPembina()" class="card p-5">
+                        <h4 class="font-700 text-sm mb-3">Catat Presensi Manual</h4>
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <select x-model="presensiManualNik" class="form-input flex-1">
+                                <option value="">— Pilih penghuni —</option>
+                                <template x-for="p in penghuniAktifList" :key="p.nik">
+                                    <option :value="p.nik" x-text="p.nama+' — '+p.nik"></option>
+                                </template>
+                            </select>
+                            <button @click="catatPresensiManual()" class="btn btn-primary whitespace-nowrap">
+                                <i class="fas fa-clipboard-check"></i> Catat Presensi
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filter & Rekap -->
+                    <div class="card">
+                        <div
+                            class="p-5 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row gap-3 sm:items-center">
+                            <input type="date" x-model="filterTanggalPresensi" class="form-input sm:w-auto">
+                            <select x-model="filterStatusPresensi" class="form-input sm:w-48">
+                                <option value="">Semua Status</option>
+                                <option value="tepat_waktu">Tepat Waktu</option>
+                                <option value="terlambat">Terlambat</option>
+                            </select>
+                            <button @click="filterTanggalPresensi='';filterStatusPresensi=''"
+                                class="btn btn-ghost text-xs">Reset Filter</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full data-table">
+                                <thead>
+                                    <tr>
+                                        <th x-show="currentRole!=='penghuni'">Nama</th>
+                                        <th>Tanggal</th>
+                                        <th>Jam Masuk</th>
+                                        <th>Jam Keluar</th>
+                                        <th>Status</th>
+                                        <th>Metode</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template x-for="r in filteredPresensi" :key="r.id">
+                                        <tr class="border-t border-slate-100 dark:border-slate-800">
+                                            <td x-show="currentRole!=='penghuni'" class="px-4 py-3 font-500"
+                                                x-text="namaPenghuniByNik(r.nik)"></td>
+                                            <td class="px-4 py-3"
+                                                x-text="new Date(r.tanggal).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})">
+                                            </td>
+                                            <td class="px-4 py-3" x-text="r.jamMasuk||'-'"></td>
+                                            <td class="px-4 py-3" x-text="r.jamKeluar||'-'"></td>
+                                            <td class="px-4 py-3"><span class="badge"
+                                                    :class="r.statusMasuk==='terlambat'?'badge-penuh':'badge-kosong'"
+                                                    x-text="r.statusMasuk==='terlambat'?'Terlambat':'Tepat Waktu'"></span>
+                                            </td>
+                                            <td class="px-4 py-3 text-slate-500 text-xs"
+                                                x-text="r.metode==='qr'?'QR Code':'Manual'"></td>
+                                        </tr>
+                                    </template>
+                                    <tr x-show="filteredPresensi.length===0">
+                                        <td colspan="6" class="text-center py-10 text-slate-400">Belum ada data presensi
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ═══ IZIN KELUAR/MASUK ═══ -->
+                <section x-show="currentPage==='izin'" x-cloak class="space-y-5 fade-in">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <h3 class="font-800 text-xl" style="font-family:'Plus Jakarta Sans',sans-serif"
+                                x-text="currentRole==='penghuni' ? 'Izin Saya' : 'Izin Keluar / Masuk'"></h3>
+                            <p class="text-sm text-slate-400 mt-0.5">Pengajuan, persetujuan, dan riwayat izin penghuni
+                            </p>
+                        </div>
+                        <button @click="openAjukanIzin()" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Ajukan Izin
+                        </button>
+                    </div>
+
+                    <div x-show="izinTelatKembali.length>0 && isAdminOrPembina()" class="err-box"
+                        style="background:#fff7ed;border-color:#fed7aa;color:#c2410c;border-radius:12px;padding:14px 18px;">
+                        <i class="fas fa-triangle-exclamation"></i>
+                        <span><b x-text="izinTelatKembali.length"></b> penghuni belum kembali melewati estimasi
+                            waktu.</span>
+                    </div>
+
+                    <div class="card">
+                        <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex gap-3">
+                            <select x-model="filterStatusIzin" class="form-input sm:w-56">
+                                <option value="">Semua Status</option>
+                                <option value="menunggu">Menunggu</option>
+                                <option value="disetujui">Disetujui</option>
+                                <option value="ditolak">Ditolak</option>
+                                <option value="selesai">Selesai</option>
+                            </select>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full data-table">
+                                <thead>
+                                    <tr>
+                                        <th x-show="currentRole!=='penghuni'">Nama</th>
+                                        <th>Tujuan</th>
+                                        <th>Tgl Keluar</th>
+                                        <th>Estimasi Kembali</th>
+                                        <th>Status</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template x-for="iz in filteredIzin" :key="iz.id">
+                                        <tr class="border-t border-slate-100 dark:border-slate-800">
+                                            <td x-show="currentRole!=='penghuni'" class="px-4 py-3 font-500"
+                                                x-text="namaPenghuniByNik(iz.nik)"></td>
+                                            <td class="px-4 py-3 max-w-[220px] truncate" x-text="iz.tujuan"></td>
+                                            <td class="px-4 py-3"
+                                                x-text="new Date(iz.tanggalKeluar).toLocaleDateString('id-ID',{day:'numeric',month:'short'})">
+                                            </td>
+                                            <td class="px-4 py-3"
+                                                x-text="new Date(iz.estimasiKembali).toLocaleString('id-ID',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})">
+                                            </td>
+                                            <td class="px-4 py-3">
+                                                <span class="badge"
+                                                    :class="iz.status==='disetujui'?'badge-terisi':iz.status==='ditolak'?'badge-penuh':iz.status==='selesai'?'badge-aktif':'badge-maintenance'"
+                                                    x-text="iz.status==='menunggu'?'Menunggu':iz.status==='disetujui'?'Disetujui':iz.status==='ditolak'?'Ditolak':'Selesai'"></span>
+                                            </td>
+                                            <td class="px-4 py-3">
+                                                <button @click="showIzinDetail(iz)"
+                                                    class="btn btn-ghost py-1 px-2.5 text-xs">Detail</button>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                    <tr x-show="filteredIzin.length===0">
+                                        <td colspan="6" class="text-center py-10 text-slate-400">Belum ada pengajuan
+                                            izin</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ═══ PELANGGARAN ═══ -->
+                <section x-show="currentPage==='pelanggaran'" x-cloak class="space-y-5 fade-in">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <h3 class="font-800 text-xl" style="font-family:'Plus Jakarta Sans',sans-serif">Pelanggaran
+                            </h3>
+                            <p class="text-sm text-slate-400 mt-0.5"
+                                x-text="pelanggaran.length+' catatan pelanggaran tercatat'"></p>
+                        </div>
+                        <button x-show="isAdminOrPembina()" @click="openAddPelanggaranModal()" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Catat Pelanggaran
+                        </button>
+                    </div>
+
+                    <div class="card">
+                        <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex gap-3">
+                            <select x-model="filterStatusPelanggaran" class="form-input sm:w-56">
+                                <option value="">Semua Status</option>
+                                <option value="proses">Dalam Proses</option>
+                                <option value="selesai">Selesai</option>
+                            </select>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full data-table">
+                                <thead>
+                                    <tr>
+                                        <th x-show="currentRole!=='penghuni'">Nama</th>
+                                        <th>Jenis</th>
+                                        <th>Tanggal</th>
+                                        <th>Sanksi</th>
+                                        <th>Status</th>
+                                        <th x-show="isAdminOrPembina()">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template x-for="p in filteredPelanggaran" :key="p.id">
+                                        <tr class="border-t border-slate-100 dark:border-slate-800">
+                                            <td x-show="currentRole!=='penghuni'" class="px-4 py-3 font-500"
+                                                x-text="namaPenghuniByNik(p.nik)"></td>
+                                            <td class="px-4 py-3" x-text="p.jenis"></td>
+                                            <td class="px-4 py-3"
+                                                x-text="new Date(p.tanggal).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})">
+                                            </td>
+                                            <td class="px-4 py-3 text-slate-500" x-text="p.sanksi||'-'"></td>
+                                            <td class="px-4 py-3"><span class="badge"
+                                                    :class="p.status==='selesai'?'badge-aktif':'badge-penuh'"
+                                                    x-text="p.status==='selesai'?'Selesai':'Proses'"></span></td>
+                                            <td x-show="isAdminOrPembina()" class="px-4 py-3">
+                                                <div class="flex gap-1.5">
+                                                    <button @click="openEditPelanggaranModal(p)"
+                                                        class="btn btn-ghost py-1 px-2 text-xs"><i
+                                                            class="fas fa-pen"></i></button>
+                                                    <button x-show="p.status==='proses'"
+                                                        @click="selesaikanPelanggaran(p)"
+                                                        class="btn btn-ghost py-1 px-2 text-xs text-green-600"><i
+                                                            class="fas fa-check"></i></button>
+                                                    <button @click="deletePelanggaran(p)"
+                                                        class="btn btn-ghost py-1 px-2 text-xs text-red-500"><i
+                                                            class="fas fa-trash"></i></button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                    <tr x-show="filteredPelanggaran.length===0">
+                                        <td colspan="6" class="text-center py-10 text-slate-400">Tidak ada catatan
+                                            pelanggaran</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ═══ AKTIVITAS ASRAMA ═══ -->
+                <section x-show="currentPage==='aktivitas'" x-cloak class="space-y-5 fade-in">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <h3 class="font-800 text-xl" style="font-family:'Plus Jakarta Sans',sans-serif">Aktivitas &
+                                Kegiatan Asrama</h3>
+                            <p class="text-sm text-slate-400 mt-0.5">Jadwal kebersihan, kegiatan bersama, dan
+                                dokumentasi</p>
+                        </div>
+                        <button x-show="isAdminOrPembina()" @click="openAddAktivitasModal()" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Tambah Kegiatan
+                        </button>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button @click="filterJenisAktivitas=''" class="btn text-xs"
+                            :class="filterJenisAktivitas===''?'btn-primary':'btn-ghost'">Semua</button>
+                        <button @click="filterJenisAktivitas='kebersihan'" class="btn text-xs"
+                            :class="filterJenisAktivitas==='kebersihan'?'btn-primary':'btn-ghost'">Kebersihan</button>
+                        <button @click="filterJenisAktivitas='bersama'" class="btn text-xs"
+                            :class="filterJenisAktivitas==='bersama'?'btn-primary':'btn-ghost'">Kegiatan
+                            Bersama</button>
+                        <button @click="filterJenisAktivitas='lainnya'" class="btn text-xs"
+                            :class="filterJenisAktivitas==='lainnya'?'btn-primary':'btn-ghost'">Lainnya</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <template x-for="a in filteredAktivitas" :key="a.id">
+                            <div class="card p-5">
+                                <div class="flex items-start justify-between mb-2">
+                                    <span class="badge"
+                                        :class="a.jenis==='kebersihan'?'badge-kosong':a.jenis==='bersama'?'badge-terisi':'badge-maintenance'"
+                                        x-text="a.jenis==='kebersihan'?'Kebersihan':a.jenis==='bersama'?'Bersama':'Lainnya'"></span>
+                                    <span class="text-xs text-slate-400"
+                                        x-text="new Date(a.tanggal).toLocaleDateString('id-ID',{day:'numeric',month:'short'})"></span>
+                                </div>
+                                <h4 class="font-700 mb-1" x-text="a.judul"></h4>
+                                <p class="text-sm text-slate-500 line-clamp-3" x-text="a.deskripsi"></p>
+                                <div x-show="isAdminOrPembina()"
+                                    class="flex gap-1.5 mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                                    <button @click="openEditAktivitasModal(a)"
+                                        class="btn btn-ghost py-1 px-2 text-xs"><i class="fas fa-pen"></i> Edit</button>
+                                    <button @click="deleteAktivitas(a)"
+                                        class="btn btn-ghost py-1 px-2 text-xs text-red-500"><i
+                                            class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                        </template>
+                        <div x-show="filteredAktivitas.length===0"
+                            class="col-span-full text-center py-16 text-slate-400">Belum ada kegiatan tercatat</div>
+                    </div>
+                </section>
+
+                <!-- ═══ MANAJEMEN PENGGUNA ═══ -->
+                <section x-show="currentPage==='pengguna'" x-cloak class="space-y-5 fade-in">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <h3 class="font-800 text-xl" style="font-family:'Plus Jakarta Sans',sans-serif">Manajemen
+                                Pengguna</h3>
+                            <p class="text-sm text-slate-400 mt-0.5" x-text="users.length+' akun terdaftar'"></p>
+                        </div>
+                        <button @click="openAddUserModal()" class="btn btn-primary">
+                            <i class="fas fa-user-plus"></i> Tambah Akun
+                        </button>
+                    </div>
+
+                    <div class="card overflow-x-auto">
+                        <table class="w-full data-table">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Nama</th>
+                                    <th>Role</th>
+                                    <th>Terkait Penghuni</th>
+                                    <th>Status</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="u in filteredUsers" :key="u.id">
+                                    <tr class="border-t border-slate-100 dark:border-slate-800">
+                                        <td class="px-4 py-3 font-600" x-text="u.username"></td>
+                                        <td class="px-4 py-3" x-text="u.nama"></td>
+                                        <td class="px-4 py-3"><span class="badge badge-terisi"
+                                                x-text="ROLE_LABEL[u.role]"></span></td>
+                                        <td class="px-4 py-3 text-slate-500"
+                                            x-text="u.nik ? namaPenghuniByNik(u.nik) : '-'"></td>
+                                        <td class="px-4 py-3">
+                                            <button @click="toggleUserActive(u)" class="badge"
+                                                :class="u.active?'badge-aktif':'badge-maintenance'"
+                                                x-text="u.active?'Aktif':'Nonaktif'"
+                                                style="cursor:pointer;border:none;"></button>
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <div class="flex gap-1.5">
+                                                <button @click="openEditUserModal(u)"
+                                                    class="btn btn-ghost py-1 px-2 text-xs"><i
+                                                        class="fas fa-pen"></i></button>
+                                                <button @click="deleteUser(u)"
+                                                    class="btn btn-ghost py-1 px-2 text-xs text-red-500"><i
+                                                        class="fas fa-trash"></i></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- ═══ INVENTARIS ═══ -->
+                <section x-show="currentPage==='inventaris'" x-cloak class="space-y-5 fade-in">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <h3 class="font-800 text-xl" style="font-family:'Plus Jakarta Sans',sans-serif">Manajemen
+                                Inventaris</h3>
+                            <p class="text-sm text-slate-400 mt-0.5"
+                                x-text="inventaris.length+' item inventaris tercatat'"></p>
+                        </div>
+                        <button @click="openAddInventarisModal()" class="btn btn-primary">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4v16m8-8H4" />
+                            </svg>
+                            Tambah Inventaris
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="card p-5 text-center">
+                            <p class="text-3xl font-800 text-emerald-600"
+                                style="font-family:'Plus Jakarta Sans',sans-serif" x-text="persenBaik+'%'"></p>
+                            <p class="text-sm text-slate-500 mt-1.5 font-500">Kondisi Baik</p>
+                            <p class="text-xs text-slate-400" x-text="totalBaik+' item'"></p>
+                        </div>
+                        <div class="card p-5 text-center">
+                            <p class="text-3xl font-800 text-amber-500"
+                                style="font-family:'Plus Jakarta Sans',sans-serif" x-text="persenRusakRingan+'%'"></p>
+                            <p class="text-sm text-slate-500 mt-1.5 font-500">Rusak Ringan</p>
+                            <p class="text-xs text-slate-400" x-text="totalRusakRingan+' item'"></p>
+                        </div>
+                        <div class="card p-5 text-center">
+                            <p class="text-3xl font-800 text-red-500" style="font-family:'Plus Jakarta Sans',sans-serif"
+                                x-text="persenRusakBerat+'%'"></p>
+                            <p class="text-sm text-slate-500 mt-1.5 font-500">Rusak Berat</p>
+                            <p class="text-xs text-slate-400" x-text="totalRusakBerat+' item'"></p>
+                        </div>
+                    </div>
+                    <div class="card p-5">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label
+                                    class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Filter
+                                    Barak</label>
+                                <select x-model="filterBarakInventaris" class="form-input">
+                                    <option value="">Semua Barak</option>
+                                    <template x-for="b in barak" :key="b.id">
+                                        <option :value="b.id" x-text="b.sisi+' – Lantai '+b.lantai"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Jenis
+                                    Barang</label>
+                                <select x-model="filterJenisInventaris" class="form-input">
+                                    <option value="">Semua Jenis</option>
+                                    <option value="tempat tidur">Tempat Tidur</option>
+                                    <option value="lemari">Lemari</option>
+                                    <option value="meja">Meja & Kursi</option>
+                                    <option value="kipas">Kipas / AC</option>
+                                    <option value="lainnya">Lainnya</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full data-table min-w-[900px]">
+                                <thead>
+                                    <tr>
+                                        <th class="text-left">No</th>
+                                        <th class="text-left">Barak</th>
+                                        <th class="text-left">Kamar</th>
+                                        <th class="text-left">Jenis Barang</th>
+                                        <th class="text-center">Total</th>
+                                        <th class="text-center">Baik</th>
+                                        <th class="text-center">Rusak Ringan</th>
+                                        <th class="text-center">Rusak Berat</th>
+                                        <th class="text-left">Catatan</th>
+                                        <th class="text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                                    <template x-for="(item,i) in filteredInventaris" :key="item.id">
+                                        <tr>
+                                            <td class="px-4 py-3.5 text-sm text-slate-400" x-text="i+1"></td>
+                                            <td class="px-4 py-3.5 text-sm font-500" x-text="item.barak"></td>
+                                            <td class="px-4 py-3.5 text-sm font-mono text-slate-500"
+                                                x-text="item.nomorKamar||'-'"></td>
+                                            <td class="px-4 py-3.5 text-sm" x-text="item.jenis"></td>
+                                            <td class="px-4 py-3.5 text-sm text-center font-700"
+                                                x-text="item.jumlahTotal"></td>
+                                            <td class="px-4 py-3.5 text-sm text-center font-600 text-emerald-600"
+                                                x-text="item.baik"></td>
+                                            <td class="px-4 py-3.5 text-sm text-center font-600 text-amber-500"
+                                                x-text="item.rusakRingan"></td>
+                                            <td class="px-4 py-3.5 text-sm text-center font-600 text-red-500"
+                                                x-text="item.rusakBerat"></td>
+                                            <td class="px-4 py-3.5 text-sm text-slate-400" x-text="item.catatan||'—'">
+                                            </td>
+                                            <td class="px-4 py-3.5 text-center">
+                                                <button @click="openEditInventarisModal(item)"
+                                                    class="p-1.5 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                    </svg>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                    <tr x-show="filteredInventaris.length===0">
+                                        <td colspan="10" class="px-4 py-16 text-center text-slate-400 text-sm">Tidak ada
+                                            data inventaris</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ═══ LAPORAN ═══ -->
+                <section x-show="currentPage==='laporan'" x-cloak class="space-y-5 fade-in">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <h3 class="font-800 text-xl" style="font-family:'Plus Jakarta Sans',sans-serif">Laporan &
+                                Statistik</h3>
+                            <p class="text-sm text-slate-400 mt-0.5">Asrama Kabupaten Deiyai · Kota Study Jayapura</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button @click="exportPDF()" :disabled="isExporting()"
+                                class="btn btn-primary disabled:opacity-50 text-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                </svg>
+                                <span x-show="!isExporting()||getExportFormat()!=='PDF'">Export PDF</span>
+                                <span x-show="isExporting()&&getExportFormat()==='PDF'">Mengekspor...</span>
+                            </button>
+                            <button @click="exportExcel()" :disabled="isExporting()"
+                                class="btn disabled:opacity-50 text-sm bg-emerald-600 text-white hover:bg-emerald-700">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                <span x-show="!isExporting()||getExportFormat()!=='Excel'">Export Excel</span>
+                                <span x-show="isExporting()&&getExportFormat()==='Excel'">Mengekspor...</span>
+                            </button>
+                            <button @click="backupAllData()"
+                                class="btn text-sm bg-violet-600 text-white hover:bg-violet-700">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                                Backup Data
+                            </button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="card p-5 text-center">
+                            <p class="text-3xl font-800 text-blue-600"
+                                style="font-family:'Plus Jakarta Sans',sans-serif" x-text="penghuniAktif"></p>
+                            <p class="text-sm text-slate-500 mt-1.5">Penghuni Aktif</p>
+                        </div>
+                        <div class="card p-5 text-center">
+                            <p class="text-3xl font-800 text-emerald-600"
+                                style="font-family:'Plus Jakarta Sans',sans-serif" x-text="hunianPersen+'%'"></p>
+                            <p class="text-sm text-slate-500 mt-1.5">Tingkat Hunian</p>
+                        </div>
+                        <div class="card p-5 text-center">
+                            <p class="text-3xl font-800 text-violet-600"
+                                style="font-family:'Plus Jakarta Sans',sans-serif" x-text="alumniTahunIni"></p>
+                            <p class="text-sm text-slate-500 mt-1.5">Alumni Tahun Ini</p>
+                        </div>
+                        <div class="card p-5 text-center">
+                            <p class="text-3xl font-800 text-amber-500"
+                                style="font-family:'Plus Jakarta Sans',sans-serif" x-text="kamarKosong"></p>
+                            <p class="text-sm text-slate-500 mt-1.5">Kamar Kosong</p>
+                        </div>
+                    </div>
+                    <div class="card p-5">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+                            <div>
+                                <label
+                                    class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Periode</label>
+                                <select x-model="filterPeriode" class="form-input">
+                                    <option value="bulan">Bulanan</option>
+                                    <option value="triwulan">Triwulan</option>
+                                    <option value="tahunan">Tahunan</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Tahun</label>
+                                <select x-model="filterTahunLaporan" class="form-input">
+                                    <template x-for="y in availableYearsLaporan" :key="y">
+                                        <option :value="y" x-text="y"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div>
+                                <button @click="generateLaporan()" class="btn btn-primary w-full justify-center">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    Generate Laporan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                        <div class="card p-6">
+                            <h4 class="font-700 text-sm mb-1" style="font-family:'Plus Jakarta Sans',sans-serif">Per
+                                Distrik</h4>
+                            <p class="text-xs text-slate-400 mb-4">Penghuni aktif berdasarkan distrik</p>
+                            <div x-show="laporanDistrik.length>0">
+                                <div class="chart-wrap" style="max-width:220px"><canvas id="chart-laporan-distrik"
+                                        height="220"></canvas></div>
+                            </div>
+                            <div x-show="laporanDistrik.length===0" class="py-10 text-center text-slate-400 text-sm">
+                                Belum ada data</div>
+                        </div>
+                        <div class="card p-6">
+                            <h4 class="font-700 text-sm mb-1" style="font-family:'Plus Jakarta Sans',sans-serif">Per
+                                Jenjang</h4>
+                            <p class="text-xs text-slate-400 mb-4">Penghuni aktif berdasarkan jenjang pendidikan</p>
+                            <div x-show="laporanJenjang.length>0">
+                                <div class="chart-wrap" style="max-width:220px"><canvas id="chart-laporan-jenjang"
+                                        height="220"></canvas></div>
+                            </div>
+                            <div x-show="laporanJenjang.length===0" class="py-10 text-center text-slate-400 text-sm">
+                                Belum ada data</div>
+                        </div>
+                        <div class="card p-6">
+                            <h4 class="font-700 text-sm mb-1" style="font-family:'Plus Jakarta Sans',sans-serif">Kondisi
+                                Inventaris</h4>
+                            <p class="text-xs text-slate-400 mb-4">Distribusi kondisi seluruh inventaris</p>
+                            <div x-show="totalInventaris>0">
+                                <div class="chart-wrap" style="max-width:220px"><canvas id="chart-laporan-inventaris"
+                                        height="220"></canvas></div>
+                            </div>
+                            <div x-show="totalInventaris===0" class="py-10 text-center text-slate-400 text-sm">Belum ada
+                                data</div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                        <div class="card overflow-hidden">
+                            <div class="p-5 border-b border-slate-100 dark:border-slate-800">
+                                <h4 class="font-700" style="font-family:'Plus Jakarta Sans',sans-serif">Penghuni per
+                                    Distrik</h4>
+                            </div>
+                            <div class="divide-y divide-slate-100 dark:divide-slate-800">
+                                <template x-for="(item,i) in laporanDistrik" :key="i">
+                                    <div class="px-5 py-3 flex items-center justify-between text-sm">
+                                        <div class="flex items-center gap-2"><span
+                                                class="w-2 h-2 rounded-full bg-blue-500"></span><span
+                                                x-text="item.distrik"></span></div>
+                                        <span class="font-700 text-slate-700 dark:text-slate-300"
+                                            x-text="item.jumlah+' orang'"></span>
+                                    </div>
+                                </template>
+                                <div x-show="laporanDistrik.length===0"
+                                    class="px-5 py-10 text-center text-slate-400 text-sm">Belum ada penghuni aktif</div>
+                            </div>
+                        </div>
+                        <div class="card overflow-hidden">
+                            <div class="p-5 border-b border-slate-100 dark:border-slate-800">
+                                <h4 class="font-700" style="font-family:'Plus Jakarta Sans',sans-serif">Penghuni per
+                                    Jenjang</h4>
+                            </div>
+                            <div class="divide-y divide-slate-100 dark:divide-slate-800">
+                                <template x-for="(item,i) in laporanJenjang" :key="i">
+                                    <div class="px-5 py-3 flex items-center justify-between text-sm">
+                                        <div class="flex items-center gap-2"><span
+                                                class="w-2 h-2 rounded-full bg-violet-500"></span><span
+                                                x-text="item.jenjang"></span></div>
+                                        <span class="font-700 text-slate-700 dark:text-slate-300"
+                                            x-text="item.jumlah+' orang'"></span>
+                                    </div>
+                                </template>
+                                <div x-show="laporanJenjang.length===0"
+                                    class="px-5 py-10 text-center text-slate-400 text-sm">Belum ada penghuni aktif</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════
+     SEMUA MODAL
+     ════════════════════════════════════════ -->
+
+    <!-- ① Modal Tambah/Edit Penghuni -->
+    <div x-show="modalOpen" class="modal-backdrop" @click.self="modalOpen=false">
+        <div class="modal-box max-w-2xl">
+            <div class="modal-header">
+                <h4 class="font-800 text-lg" style="font-family:'Plus Jakarta Sans',sans-serif"
+                    x-text="isEditMode?'Edit Data Penghuni':'Tambah Penghuni Baru'"></h4>
+                <button @click="modalOpen=false"
+                    class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"><svg class="w-5 h-5"
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg></button>
+            </div>
+            <div class="p-6">
+                <form @submit.prevent="savePenghuni" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div><label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">NIK <span
+                                class="text-red-500">*</span></label><input type="text" x-model="form.nik"
+                            :readonly="isEditMode" required class="form-input" autocomplete="off"></div>
+                    <div><label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Nama
+                            Lengkap <span class="text-red-500">*</span></label><input type="text" x-model="form.nama"
+                            required class="form-input" autocomplete="name"></div>
+                    <div><label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">NISN /
+                            NIM</label><input type="text" x-model="form.nisn_nim" class="form-input" autocomplete="off">
+                    </div>
+                    <div><label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Asal
+                            Distrik <span class="text-red-500">*</span></label><input type="text" x-model="form.distrik"
+                            required class="form-input" autocomplete="off"></div>
+                    <div><label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Jenjang
+                            <span class="text-red-500">*</span></label>
+                        <select x-model="form.jenjang" required class="form-input">
+                            <option value="">Pilih Jenjang</option>
+                            <option value="SMA">SMA/SMK/MA</option>
+                            <option value="Mahasiswa">Mahasiswa (D3/S1/S2)</option>
+                        </select>
+                    </div>
+                    <div><label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Tahun
+                            Masuk <span class="text-red-500">*</span></label><input type="number"
+                            x-model="form.tahun_masuk" required min="2010" max="2030" class="form-input"
+                            autocomplete="off"></div>
+                    <div><label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Jenis
+                            Kelamin</label>
+                        <select x-model="form.jenis_kelamin" class="form-input">
+                            <option value="">Pilih</option>
+                            <option value="Laki-laki">Laki-laki</option>
+                            <option value="Perempuan">Perempuan</option>
+                        </select>
+                    </div>
+                    <div><label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">No. HP /
+                            WA</label><input type="tel" x-model="form.no_hp" class="form-input" autocomplete="tel">
+                    </div>
+                    <div class="sm:col-span-2"><label
+                            class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Status <span
+                                class="text-red-500">*</span></label>
+                        <select x-model="form.status" required class="form-input">
+                            <option value="aktif">Aktif</option>
+                            <option value="keluar">Keluar</option>
+                            <option value="alumni">Alumni</option>
+                        </select>
+                    </div>
+                    <div class="sm:col-span-2" x-show="form.status && form.status !== 'aktif'">
+                        <label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Tanggal
+                            Keluar</label>
+                        <input type="date" x-model="form.tanggalKeluar" class="form-input" autocomplete="off">
+                    </div>
+                    <div class="sm:col-span-2 flex justify-end gap-3 pt-2">
+                        <button type="button" @click="modalOpen=false" class="btn btn-ghost">Batal</button>
+                        <button type="submit" class="btn btn-primary"
+                            x-text="isEditMode?'Simpan Perubahan':'Tambah Penghuni'"></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ② Modal Tambah/Edit Barak -->
+    <div x-show="barakModalOpen" class="modal-backdrop" @click.self="barakModalOpen=false">
+        <div class="modal-box max-w-md">
+            <div class="modal-header">
+                <h4 class="font-800 text-lg" style="font-family:'Plus Jakarta Sans',sans-serif"
+                    x-text="isEditBarak?'Edit Barak':'Tambah Barak Baru'"></h4>
+                <button @click="barakModalOpen=false"
+                    class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"><svg class="w-5 h-5"
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div><label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Nama / Sisi
+                        Barak <span class="text-red-500">*</span></label><input type="text" x-model="barakForm.sisi"
+                        placeholder="cth: Barak Putra Kiri" class="form-input" autocomplete="off"></div>
+                <div><label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Lantai <span
+                            class="text-red-500">*</span></label><input type="number" x-model="barakForm.lantai" min="1"
+                        max="10" class="form-input" autocomplete="off"></div>
+                <div>
+                    <label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Kapasitas Kamar
+                        <span class="text-red-500">*</span></label>
+                    <input type="number" x-model="barakForm.kapasitas" min="1" max="99" class="form-input"
+                        autocomplete="off">
+                    <p class="text-xs text-slate-400 mt-1" x-show="!isEditBarak">Jumlah kamar akan dibuat otomatis
+                        sesuai kapasitas</p>
+                    <p class="text-xs text-amber-500 mt-1" x-show="isEditBarak">Mengubah kapasitas akan menyesuaikan
+                        jumlah kamar (kamar terisi tidak akan dihapus)</p>
+                </div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button @click="barakModalOpen=false" class="btn btn-ghost">Batal</button>
+                    <button @click="saveBarak()" class="btn btn-primary"
+                        x-text="isEditBarak?'Simpan Perubahan':'Tambah Barak'"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ③ Modal Detail Kamar – UPDATED: multi-penghuni per kamar -->
+    <div x-show="detailKamarOpen" class="modal-backdrop" @click.self="detailKamarOpen=false">
+        <div class="modal-box max-w-4xl">
+            <div class="modal-header">
+                <div>
+                    <h4 class="font-800 text-lg" style="font-family:'Plus Jakarta Sans',sans-serif">Detail Kamar</h4>
+                    <p class="text-sm text-slate-400 mt-0.5"
+                        x-text="selectedDetailBarak?.sisi+' · Lantai '+selectedDetailBarak?.lantai"></p>
+                </div>
+                <button @click="detailKamarOpen=false"
+                    class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6">
+                <!-- Label kapasitas -->
+                <p class="text-xs text-slate-400 mb-4">
+                    Setiap kamar menampung maks. <strong x-text="MAX_PENGHUNI_PER_KAMAR"></strong> penghuni.
+                    Klik <span class="text-red-500 font-600">Keluarkan</span> untuk mengeluarkan penghuni tertentu.
+                </p>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    <template x-for="k in (selectedDetailBarak?.daftarKamar||[])" :key="k.nomor">
+                        <div class="rounded-xl border p-3 transition-all" :class="{
+                                'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50': k.status==='kosong',
+                                'border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/20': k.status==='terisi_sebagian',
+                                'border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20': k.status==='penuh'
+                            }">
+                            <!-- Nomor kamar + badge slot -->
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="font-800 text-base" style="font-family:'Plus Jakarta Sans',sans-serif"
+                                    x-text="k.nomor"></p>
+                                <span class="text-xs font-600 px-2 py-0.5 rounded-full" :class="{
+                                        'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300': k.status==='kosong',
+                                        'bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200': k.status==='terisi_sebagian',
+                                        'bg-red-100 dark:bg-red-800 text-red-700 dark:text-red-200': k.status==='penuh'
+                                    }" x-text="(k.penghuniList||[]).length+'/'+MAX_PENGHUNI_PER_KAMAR"></span>
+                            </div>
+
+                            <!-- Daftar penghuni di kamar ini -->
+                            <div class="space-y-1.5">
+                                <template x-for="nik in (k.penghuniList||[])" :key="nik">
+                                    <div
+                                        class="flex items-center justify-between gap-1.5 bg-white dark:bg-slate-700 rounded-lg px-2 py-1.5 shadow-sm">
+                                        <span class="text-xs font-500 truncate leading-tight"
+                                            x-text="penghuni.find(p=>p.nik===nik)?.nama||'(hilang)'"></span>
+                                        <button @click="kosongkanSatuPenghuni(selectedDetailBarak, k, nik)"
+                                            class="flex-shrink-0 text-xs text-red-500 hover:text-red-700 font-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded px-1.5 py-0.5 transition">
+                                            ✕
+                                        </button>
+                                    </div>
+                                </template>
+
+                                <!-- Placeholder slot kosong -->
+                                <template x-for="i in (MAX_PENGHUNI_PER_KAMAR - (k.penghuniList||[]).length)"
+                                    :key="'slot-'+i">
+                                    <div
+                                        class="flex items-center gap-1.5 border border-dashed border-slate-300 dark:border-slate-600 rounded-lg px-2 py-1.5">
+                                        <span class="text-xs text-slate-400">Slot kosong</span>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                <div x-show="!(selectedDetailBarak?.daftarKamar?.length)" class="text-center py-12 text-slate-400">Tidak
+                    ada data kamar</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ④ Modal Assign Penghuni – UPDATED: tampilkan slot per kamar -->
+    <div x-show="assignModalOpen" class="modal-backdrop" @click.self="assignModalOpen=false">
+        <div class="modal-box max-w-2xl">
+            <div class="modal-header">
+                <div>
+                    <h4 class="font-800 text-lg" style="font-family:'Plus Jakarta Sans',sans-serif">Assign Penghuni ke
+                        Kamar</h4>
+                    <p class="text-sm text-slate-400 mt-0.5">Pilih penghuni, lalu pilih barak dan kamar tujuan</p>
+                </div>
+                <button @click="assignModalOpen=false"
+                    class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6 space-y-5">
+                <!-- Langkah 1: Pilih Penghuni -->
+                <div>
+                    <label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">
+                        <span
+                            class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-500 text-white text-xs font-700 mr-1.5">1</span>
+                        Pilih Penghuni Aktif (Belum Ditempatkan)
+                    </label>
+                    <select x-model="selectedPenghuniId" class="form-input">
+                        <option value="">-- Pilih Penghuni --</option>
+                        <template x-for="p in penghuniBisaDiassign" :key="p.nik">
+                            <option :value="p.nik" x-text="p.nama+' · '+p.nik+' · '+p.distrik"></option>
+                        </template>
+                    </select>
+                    <div x-show="penghuniBisaDiassign.length===0"
+                        class="mt-2 text-xs text-amber-600 bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg">
+                        Tidak ada penghuni aktif yang belum ditempatkan.
+                    </div>
+                </div>
+
+                <!-- Detail penghuni terpilih -->
+                <div x-show="selectedPenghuniDetail" class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 text-sm">
+                    <p class="font-600 text-xs text-slate-500 uppercase tracking-wider mb-2">Detail Penghuni Terpilih
+                    </p>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div>
+                            <p class="text-xs text-slate-400">Nama</p>
+                            <p class="font-600" x-text="selectedPenghuniDetail?.nama"></p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400">NIK</p>
+                            <p class="font-mono text-xs" x-text="selectedPenghuniDetail?.nik"></p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400">Jenjang</p>
+                            <p class="font-600" x-text="selectedPenghuniDetail?.jenjang"></p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400">Distrik</p>
+                            <p class="font-600" x-text="selectedPenghuniDetail?.distrik"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Langkah 2: Pilih Barak -->
+                <div>
+                    <label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">
+                        <span
+                            class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-500 text-white text-xs font-700 mr-1.5">2</span>
+                        Pilih Barak Tujuan
+                    </label>
+                    <select x-model="assignSelectedBarakId" @change="onAssignBarakChange()" class="form-input">
+                        <option value="">-- Pilih Barak --</option>
+                        <template x-for="b in barakBisaDiassign" :key="b.id">
+                            <option :value="String(b.id)"
+                                x-text="b.sisi+' – Lantai '+b.lantai+' ('+b.terisi+' penghuni, slot tersedia: '+(b.daftarKamar||[]).reduce((s,k)=>s+Math.max(0,MAX_PENGHUNI_PER_KAMAR-(k.penghuniList||[]).length),0)+')'">
+                            </option>
+                        </template>
+                    </select>
+                    <div x-show="barakBisaDiassign.length===0"
+                        class="mt-2 text-xs text-amber-600 bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg">
+                        Tidak ada barak yang tersedia.
+                    </div>
+                    <div x-show="assignBarakDetail" class="mt-3 grid grid-cols-3 gap-3 text-center">
+                        <div class="bg-slate-100 dark:bg-slate-800 rounded-xl p-3">
+                            <p class="text-xs text-slate-500 mb-1">Total Kamar</p>
+                            <p class="text-xl font-800 text-slate-700 dark:text-slate-200"
+                                style="font-family:'Plus Jakarta Sans',sans-serif"
+                                x-text="assignBarakDetail?.kapasitas||'-'"></p>
+                        </div>
+                        <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-3">
+                            <p class="text-xs text-slate-500 mb-1">Total Penghuni</p>
+                            <p class="text-xl font-800 text-blue-600" style="font-family:'Plus Jakarta Sans',sans-serif"
+                                x-text="assignBarakDetail?.terisi||0"></p>
+                        </div>
+                        <div class="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-3">
+                            <p class="text-xs text-slate-500 mb-1">Slot Kosong</p>
+                            <p class="text-xl font-800 text-emerald-600"
+                                style="font-family:'Plus Jakarta Sans',sans-serif"
+                                x-text="assignBarakDetail ? (assignBarakDetail.daftarKamar||[]).reduce((s,k)=>s+Math.max(0,MAX_PENGHUNI_PER_KAMAR-(k.penghuniList||[]).length),0) : '-'">
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Langkah 3: Pilih Kamar (tampilkan slot) -->
+                <div x-show="assignSelectedBarakId">
+                    <label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-2">
+                        <span
+                            class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-500 text-white text-xs font-700 mr-1.5">3</span>
+                        Pilih Kamar
+                        <span class="text-slate-400 font-400 normal-case ml-1">(kamar abu-abu = penuh, tidak bisa
+                            dipilih)</span>
+                    </label>
+                    <div class="kamar-select-grid">
+                        <template x-for="k in (assignBarakDetail?.daftarKamar||[])" :key="k.nomor">
+                            <button type="button" class="kamar-btn" :class="[
+                                    !_kamarBisaDisisi(k) ? 'terisi' : (assignSelectedKamarNomor===k.nomor ? 'selected' : 'kosong')
+                                ]" :disabled="!_kamarBisaDisisi(k)"
+                                @click="_kamarBisaDisisi(k) && (assignSelectedKamarNomor=k.nomor)">
+                                <span x-text="k.nomor"></span>
+                                <span class="block text-xs font-400 mt-0.5 opacity-75"
+                                    x-text="(k.penghuniList||[]).length+'/'+MAX_PENGHUNI_PER_KAMAR"></span>
+                            </button>
+                        </template>
+                    </div>
+                    <div x-show="assignSelectedKamarNomor"
+                        class="mt-3 flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl px-4 py-3">
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Kamar <strong class="font-700 mx-1" x-text="assignSelectedKamarNomor"></strong> dipilih
+                        <span class="ml-auto text-xs opacity-75"
+                            x-text="'Sisa slot: '+(MAX_PENGHUNI_PER_KAMAR - ((assignBarakDetail?.daftarKamar||[]).find(k=>k.nomor===assignSelectedKamarNomor)?.penghuniList||[]).length - 1)"></span>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-1">
+                    <button @click="assignModalOpen=false" class="btn btn-ghost">Batal</button>
+                    <button @click="assignPenghuni()"
+                        :disabled="!selectedPenghuniId||!assignSelectedBarakId||!assignSelectedKamarNomor||assigning"
+                        class="btn btn-primary disabled:opacity-50">
+                        <template x-if="!assigning"><span>Tempatkan Sekarang</span></template>
+                        <template x-if="assigning">
+                            <span class="flex items-center gap-2">
+                                <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                        stroke-width="4" />
+                                    <path class="opacity-75" fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                </svg>
+                                Memproses...
+                            </span>
+                        </template>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ⑤ Modal Riwayat Penghuni -->
+    <div x-show="riwayatOpen" class="modal-backdrop" @click.self="riwayatOpen=false">
+        <div class="modal-box max-w-3xl">
+            <div class="modal-header">
+                <div>
+                    <h4 class="font-800 text-lg" style="font-family:'Plus Jakarta Sans',sans-serif">Riwayat Penempatan
+                    </h4>
+                    <p class="text-sm text-slate-400 mt-0.5" x-text="selectedPenghuni?.nama"></p>
+                </div>
+                <button @click="riwayatOpen=false"
+                    class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"><svg class="w-5 h-5"
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg></button>
+            </div>
+            <div class="p-6 overflow-x-auto">
+                <table class="w-full data-table">
+                    <thead>
+                        <tr>
+                            <th class="text-left">Kamar</th>
+                            <th class="text-left">Barak</th>
+                            <th class="text-left">Tgl Masuk</th>
+                            <th class="text-left">Tgl Keluar</th>
+                            <th class="text-left">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                        <template x-for="(item,i) in selectedRiwayat" :key="i">
+                            <tr>
+                                <td class="px-4 py-3 text-sm font-600" x-text="item.kamar||'-'"></td>
+                                <td class="px-4 py-3 text-sm text-slate-500" x-text="item.barak||'-'"></td>
+                                <td class="px-4 py-3 text-sm text-slate-500" x-text="item.tanggalMasuk||'-'"></td>
+                                <td class="px-4 py-3 text-sm text-slate-500"
+                                    x-text="item.tanggalKeluar||'Masih Menempati'"></td>
+                                <td class="px-4 py-3"><span class="badge"
+                                        :class="item.status==='Saat Ini'?'badge-aktif':'badge-alumni'"
+                                        x-text="item.status"></span></td>
+                            </tr>
+                        </template>
+                        <tr x-show="selectedRiwayat.length===0">
+                            <td colspan="5" class="py-12 text-center text-slate-400 text-sm">Belum ada riwayat
+                                penempatan</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                <button @click="riwayatOpen=false" class="btn btn-primary">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ⑥ Modal Riwayat Kamar -->
+    <div x-show="riwayatKamarOpen" class="modal-backdrop" @click.self="riwayatKamarOpen=false">
+        <div class="modal-box max-w-3xl">
+            <div class="modal-header">
+                <div>
+                    <h4 class="font-800 text-lg" style="font-family:'Plus Jakarta Sans',sans-serif">Riwayat Penempatan
+                    </h4>
+                    <p class="text-sm text-slate-400 mt-0.5"
+                        x-text="selectedKamarRiwayat?.sisi+' · Lantai '+selectedKamarRiwayat?.lantai"></p>
+                </div>
+                <button @click="riwayatKamarOpen=false"
+                    class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"><svg class="w-5 h-5"
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg></button>
+            </div>
+            <div class="p-6 overflow-x-auto">
+                <table class="w-full data-table">
+                    <thead>
+                        <tr>
+                            <th class="text-left">Kamar</th>
+                            <th class="text-left">Penghuni</th>
+                            <th class="text-left">Periode</th>
+                            <th class="text-left">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                        <template x-for="(entry,i) in (selectedRiwayatKamar||[])" :key="i">
+                            <tr>
+                                <td class="px-4 py-3 text-sm font-600" x-text="entry.kamar||'-'"></td>
+                                <td class="px-4 py-3 text-sm font-500" x-text="entry.penghuni||'(hilang)'"></td>
+                                <td class="px-4 py-3 text-xs text-slate-500 font-mono" x-text="entry.periode||'-'"></td>
+                                <td class="px-4 py-3"><span class="badge"
+                                        :class="entry.status==='aktif'?'badge-aktif':'badge-keluar'"
+                                        x-text="entry.status==='aktif'?'Aktif':'Keluar'"></span></td>
+                            </tr>
+                        </template>
+                        <tr x-show="(selectedRiwayatKamar||[]).length===0">
+                            <td colspan="4" class="py-12 text-center text-slate-400 text-sm">Belum ada riwayat
+                                penempatan</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                <button @click="riwayatKamarOpen=false" class="btn btn-primary">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ⑦ Modal Inventaris -->
+    <div x-show="inventarisModalOpen" class="modal-backdrop" @click.self="inventarisModalOpen=false">
+        <div class="modal-box max-w-lg">
+            <div class="modal-header">
+                <h4 class="font-800 text-lg" style="font-family:'Plus Jakarta Sans',sans-serif"
+                    x-text="isEditInventaris?'Edit Inventaris':'Tambah Inventaris Baru'"></h4>
+                <button @click="inventarisModalOpen=false"
+                    class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"><svg class="w-5 h-5"
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg></button>
+            </div>
+            <div class="p-6">
+                <form @submit.prevent="saveInventaris" class="space-y-4">
+                    <div><label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Barak
+                            <span class="text-red-500">*</span></label>
+                        <select x-model="inventarisForm.barakId" @change="updateDaftarKamar()" required
+                            class="form-input">
+                            <option value="">-- Pilih Barak --</option>
+                            <template x-for="b in barak" :key="b.id">
+                                <option :value="b.id" x-text="b.sisi+' – Lt.'+b.lantai"></option>
+                            </template>
+                        </select>
+                    </div>
+                    <div><label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Nomor
+                            Kamar</label>
+                        <select x-model="inventarisForm.nomorKamar" class="form-input">
+                            <option value="">-- Pilih Kamar (opsional) --</option>
+                            <template x-for="k in daftarKamarPilihan" :key="k.nomor">
+                                <option :value="k.nomor" x-text="k.nomor+(k.status==='terisi'?' (Terisi)':' (Kosong)')">
+                                </option>
+                            </template>
+                        </select>
+                    </div>
+                    <div><label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Jenis
+                            Barang <span class="text-red-500">*</span></label>
+                        <select x-model="inventarisForm.jenis" required class="form-input">
+                            <option value="">Pilih Jenis</option>
+                            <option value="tempat tidur">Tempat Tidur</option>
+                            <option value="lemari">Lemari</option>
+                            <option value="meja">Meja & Kursi</option>
+                            <option value="kipas">Kipas / AC</option>
+                            <option value="lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div><label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Jumlah
+                                Total <span class="text-red-500">*</span></label><input type="number"
+                                x-model="inventarisForm.jumlahTotal" required min="1" class="form-input"
+                                autocomplete="off"></div>
+                        <div><label
+                                class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Kondisi
+                                Baik</label><input type="number" x-model="inventarisForm.baik" min="0"
+                                class="form-input" autocomplete="off"></div>
+                        <div><label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Rusak
+                                Ringan</label><input type="number" x-model="inventarisForm.rusakRingan" min="0"
+                                class="form-input" autocomplete="off"></div>
+                        <div><label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Rusak
+                                Berat</label><input type="number" x-model="inventarisForm.rusakBerat" min="0"
+                                class="form-input" autocomplete="off"></div>
+                    </div>
+                    <div><label
+                            class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Catatan</label><textarea
+                            x-model="inventarisForm.catatan" rows="2" class="form-input" autocomplete="off"></textarea>
+                    </div>
+                    <div class="flex justify-end gap-3 pt-2">
+                        <button type="button" @click="inventarisModalOpen=false" class="btn btn-ghost">Batal</button>
+                        <button type="submit" class="btn btn-primary"
+                            x-text="isEditInventaris?'Simpan Perubahan':'Tambah Inventaris'"></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ⑨ Modal Scanner QR Presensi -->
+    <div x-show="scannerOpen" class="modal-backdrop" @click.self="closeScanner()">
+        <div class="modal-box max-w-md">
+            <div class="modal-header">
+                <h4 class="font-800 text-lg" style="font-family:'Plus Jakarta Sans',sans-serif">Scan QR Presensi</h4>
+                <button @click="closeScanner()"
+                    class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div id="qr-reader" style="width:100%;border-radius:12px;overflow:hidden;"></div>
+                <div x-show="scanFeedback" class="rounded-xl px-4 py-3 text-sm font-500 flex items-center gap-2"
+                    :class="scanFeedback && scanFeedback.type==='success' ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400' : scanFeedback && scanFeedback.type==='error' ? 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400' : 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'">
+                    <i class="fas"
+                        :class="scanFeedback && scanFeedback.type==='success' ? 'fa-circle-check' : scanFeedback && scanFeedback.type==='error' ? 'fa-circle-exclamation' : 'fa-circle-info'"></i>
+                    <span x-text="scanFeedback ? scanFeedback.text : ''"></span>
+                </div>
+                <p class="text-xs text-slate-400 text-center">Arahkan kamera ke QR Code pada kartu anggota penghuni</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ⑩ Modal Kartu Anggota (QR) -->
+    <div x-show="kartuModalOpen" class="modal-backdrop" @click.self="kartuModalOpen=false">
+        <div class="modal-box max-w-sm">
+            <div class="modal-header">
+                <h4 class="font-800 text-lg" style="font-family:'Plus Jakarta Sans',sans-serif">Kartu Anggota</h4>
+                <button @click="kartuModalOpen=false"
+                    class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6 text-center" x-show="kartuPenghuni">
+                <p class="font-800 text-lg" x-text="kartuPenghuni ? kartuPenghuni.nama : ''"></p>
+                <p class="text-sm text-slate-400 mb-4" x-text="kartuPenghuni ? kartuPenghuni.nik : ''"></p>
+                <div id="qr-kartu-anggota" class="flex items-center justify-center mb-4"></div>
+                <p class="text-xs text-slate-400 mb-4">Tunjukkan QR ini kepada petugas untuk presensi</p>
+                <button @click="downloadKartu()" class="btn btn-primary w-full"><i class="fas fa-download"></i> Unduh
+                    QR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ⑪ Modal Ajukan Izin -->
+    <div x-show="izinModalOpen" class="modal-backdrop" @click.self="izinModalOpen=false">
+        <div class="modal-box max-w-lg">
+            <div class="modal-header">
+                <h4 class="font-800 text-lg" style="font-family:'Plus Jakarta Sans',sans-serif">Ajukan Izin Keluar</h4>
+                <button @click="izinModalOpen=false"
+                    class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6">
+                <form @submit.prevent="simpanIzin" class="space-y-4">
+                    <div x-show="currentRole!=='penghuni'">
+                        <label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Penghuni
+                            <span class="text-red-500">*</span></label>
+                        <select x-model="izinForm.nik" class="form-input">
+                            <option value="">-- Pilih Penghuni --</option>
+                            <template x-for="p in penghuniAktifList" :key="p.nik">
+                                <option :value="p.nik" x-text="p.nama"></option>
+                            </template>
+                        </select>
+                    </div>
+                    <div><label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Tujuan
+                            Izin <span class="text-red-500">*</span></label>
+                        <textarea x-model="izinForm.tujuan" rows="2" class="form-input"
+                            placeholder="Contoh: Pulang ke keluarga akhir pekan"></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div><label
+                                class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Tanggal
+                                Keluar <span class="text-red-500">*</span></label>
+                            <input type="date" x-model="izinForm.tanggalKeluar" class="form-input">
+                        </div>
+                        <div><label
+                                class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Estimasi
+                                Kembali <span class="text-red-500">*</span></label>
+                            <input type="datetime-local" x-model="izinForm.estimasiKembali" class="form-input">
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-3 pt-2">
+                        <button type="button" @click="izinModalOpen=false" class="btn btn-ghost">Batal</button>
+                        <button type="submit" class="btn btn-primary">Ajukan Izin</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ⑫ Modal Detail Izin (approve/reject) -->
+    <div x-show="izinDetailOpen" class="modal-backdrop" @click.self="izinDetailOpen=false">
+        <div class="modal-box max-w-lg" x-show="selectedIzin">
+            <div class="modal-header">
+                <h4 class="font-800 text-lg" style="font-family:'Plus Jakarta Sans',sans-serif">Detail Izin</h4>
+                <button @click="izinDetailOpen=false"
+                    class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6 space-y-3 text-sm" x-show="selectedIzin">
+                <div class="flex justify-between"><span class="text-slate-400">Penghuni</span><span class="font-600"
+                        x-text="selectedIzin ? namaPenghuniByNik(selectedIzin.nik) : ''"></span></div>
+                <div class="flex justify-between"><span class="text-slate-400">Tujuan</span><span
+                        class="font-600 text-right max-w-[65%]" x-text="selectedIzin?.tujuan"></span></div>
+                <div class="flex justify-between"><span class="text-slate-400">Tanggal Keluar</span><span
+                        class="font-600"
+                        x-text="selectedIzin ? new Date(selectedIzin.tanggalKeluar).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}) : ''"></span>
+                </div>
+                <div class="flex justify-between"><span class="text-slate-400">Estimasi Kembali</span><span
+                        class="font-600"
+                        x-text="selectedIzin ? new Date(selectedIzin.estimasiKembali).toLocaleString('id-ID',{day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'}) : ''"></span>
+                </div>
+                <div class="flex justify-between"><span class="text-slate-400">Status</span>
+                    <span class="badge"
+                        :class="selectedIzin?.status==='disetujui'?'badge-terisi':selectedIzin?.status==='ditolak'?'badge-penuh':selectedIzin?.status==='selesai'?'badge-aktif':'badge-maintenance'"
+                        x-text="selectedIzin?.status==='menunggu'?'Menunggu':selectedIzin?.status==='disetujui'?'Disetujui':selectedIzin?.status==='ditolak'?'Ditolak':'Selesai'"></span>
+                </div>
+                <div x-show="selectedIzin?.catatanAdmin"
+                    class="text-slate-500 bg-slate-50 dark:bg-slate-800 rounded-lg p-3"
+                    x-text="'Catatan: '+(selectedIzin?.catatanAdmin||'')"></div>
+
+                <div x-show="isAdminOrPembina() && selectedIzin?.status==='menunggu'" class="flex gap-3 pt-3">
+                    <button @click="tolakIzin(selectedIzin)" class="btn btn-danger flex-1">Tolak</button>
+                    <button @click="setujuiIzin(selectedIzin)" class="btn btn-primary flex-1">Setujui</button>
+                </div>
+                <div x-show="isAdminOrPembina() && selectedIzin?.status==='disetujui'" class="pt-3">
+                    <button @click="tandaiKembali(selectedIzin)" class="btn btn-primary w-full">Tandai Sudah
+                        Kembali</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ⑬ Modal Pelanggaran -->
+    <div x-show="pelanggaranModalOpen" class="modal-backdrop" @click.self="pelanggaranModalOpen=false">
+        <div class="modal-box max-w-lg">
+            <div class="modal-header">
+                <h4 class="font-800 text-lg" style="font-family:'Plus Jakarta Sans',sans-serif"
+                    x-text="isEditPelanggaran?'Edit Pelanggaran':'Catat Pelanggaran'"></h4>
+                <button @click="pelanggaranModalOpen=false"
+                    class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6">
+                <form @submit.prevent="simpanPelanggaran" class="space-y-4">
+                    <div><label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Penghuni
+                            <span class="text-red-500">*</span></label>
+                        <select x-model="pelanggaranForm.nik" class="form-input">
+                            <option value="">-- Pilih Penghuni --</option>
+                            <template x-for="p in penghuniAktifList" :key="p.nik">
+                                <option :value="p.nik" x-text="p.nama"></option>
+                            </template>
+                        </select>
+                    </div>
+                    <div><label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Jenis
+                            Pelanggaran <span class="text-red-500">*</span></label>
+                        <input type="text" x-model="pelanggaranForm.jenis" class="form-input"
+                            placeholder="Contoh: Terlambat kembali ke asrama">
+                    </div>
+                    <div><label
+                            class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Tanggal</label>
+                        <input type="date" x-model="pelanggaranForm.tanggal" class="form-input">
+                    </div>
+                    <div><label
+                            class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Keterangan</label>
+                        <textarea x-model="pelanggaranForm.keterangan" rows="2" class="form-input"></textarea>
+                    </div>
+                    <div><label
+                            class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Sanksi</label>
+                        <input type="text" x-model="pelanggaranForm.sanksi" class="form-input"
+                            placeholder="Contoh: Teguran lisan">
+                    </div>
+                    <div class="flex justify-end gap-3 pt-2">
+                        <button type="button" @click="pelanggaranModalOpen=false" class="btn btn-ghost">Batal</button>
+                        <button type="submit" class="btn btn-primary"
+                            x-text="isEditPelanggaran?'Simpan Perubahan':'Catat Pelanggaran'"></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ⑭ Modal Aktivitas -->
+    <div x-show="aktivitasModalOpen" class="modal-backdrop" @click.self="aktivitasModalOpen=false">
+        <div class="modal-box max-w-lg">
+            <div class="modal-header">
+                <h4 class="font-800 text-lg" style="font-family:'Plus Jakarta Sans',sans-serif"
+                    x-text="isEditAktivitas?'Edit Kegiatan':'Tambah Kegiatan'"></h4>
+                <button @click="aktivitasModalOpen=false"
+                    class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6">
+                <form @submit.prevent="simpanAktivitas" class="space-y-4">
+                    <div><label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Judul
+                            Kegiatan <span class="text-red-500">*</span></label>
+                        <input type="text" x-model="aktivitasForm.judul" class="form-input">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div><label
+                                class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Jenis</label>
+                            <select x-model="aktivitasForm.jenis" class="form-input">
+                                <option value="kebersihan">Kebersihan</option>
+                                <option value="bersama">Kegiatan Bersama</option>
+                                <option value="lainnya">Lainnya</option>
+                            </select>
+                        </div>
+                        <div><label
+                                class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Tanggal</label>
+                            <input type="date" x-model="aktivitasForm.tanggal" class="form-input">
+                        </div>
+                    </div>
+                    <div><label
+                            class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Deskripsi</label>
+                        <textarea x-model="aktivitasForm.deskripsi" rows="3" class="form-input"></textarea>
+                    </div>
+                    <div class="flex justify-end gap-3 pt-2">
+                        <button type="button" @click="aktivitasModalOpen=false" class="btn btn-ghost">Batal</button>
+                        <button type="submit" class="btn btn-primary"
+                            x-text="isEditAktivitas?'Simpan Perubahan':'Tambah Kegiatan'"></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ⑮ Modal Manajemen Pengguna -->
+    <div x-show="userModalOpen" class="modal-backdrop" @click.self="userModalOpen=false">
+        <div class="modal-box max-w-lg">
+            <div class="modal-header">
+                <h4 class="font-800 text-lg" style="font-family:'Plus Jakarta Sans',sans-serif"
+                    x-text="isEditUser?'Edit Akun':'Tambah Akun Pengguna'"></h4>
+                <button @click="userModalOpen=false"
+                    class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6">
+                <form @submit.prevent="simpanUser" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div><label
+                                class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Username
+                                <span class="text-red-500">*</span></label>
+                            <input type="text" x-model="userForm.username" class="form-input" autocomplete="off">
+                        </div>
+                        <div><label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Kata
+                                Sandi <span class="text-red-500">*</span></label>
+                            <input type="text" x-model="userForm.password" class="form-input" autocomplete="off">
+                        </div>
+                    </div>
+                    <div><label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Nama
+                            Lengkap <span class="text-red-500">*</span></label>
+                        <input type="text" x-model="userForm.nama" class="form-input">
+                    </div>
+                    <div><label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Role <span
+                                class="text-red-500">*</span></label>
+                        <select x-model="userForm.role" class="form-input">
+                            <option value="admin">Administrator</option>
+                            <option value="pembina">Pembina Asrama</option>
+                            <option value="penghuni">Penghuni</option>
+                            <option value="pimpinan">Pimpinan</option>
+                        </select>
+                    </div>
+                    <div x-show="userForm.role==='penghuni'">
+                        <label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Terkait
+                            Data Penghuni</label>
+                        <select x-model="userForm.nik" class="form-input">
+                            <option value="">-- Pilih Penghuni --</option>
+                            <template x-for="p in penghuniAktifList" :key="p.nik">
+                                <option :value="p.nik" x-text="p.nama"></option>
+                            </template>
+                        </select>
+                    </div>
+                    <label class="flex items-center gap-2 text-sm">
+                        <input type="checkbox" x-model="userForm.active" class="w-4 h-4"> Akun aktif
+                    </label>
+                    <div class="flex justify-end gap-3 pt-2">
+                        <button type="button" @click="userModalOpen=false" class="btn btn-ghost">Batal</button>
+                        <button type="submit" class="btn btn-primary"
+                            x-text="isEditUser?'Simpan Perubahan':'Tambah Akun'"></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ⑧ Modal Profil & Pengaturan - VERSI FINAL (No Warning) -->
+    <div x-show="profileModalOpen" class="modal-backdrop" @click.self="profileModalOpen=false">
+        <div class="modal-box max-w-xl">
+            <div class="modal-header">
+                <h3 class="font-800 text-lg" style="font-family:'Plus Jakarta Sans',sans-serif">Pengaturan Akun</h3>
+                <button @click="profileModalOpen=false"
+                    class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="flex border-b border-slate-100 dark:border-slate-800">
+                <button @click="activeTab='profile'"
+                    :class="activeTab==='profile' ? 'border-b-2 border-blue-500 text-blue-600 font-600' : 'text-slate-500 hover:text-slate-700'"
+                    class="flex-1 py-3 text-sm transition">Profil Saya</button>
+                <button @click="activeTab='settings'"
+                    :class="activeTab==='settings' ? 'border-b-2 border-blue-500 text-blue-600 font-600' : 'text-slate-500 hover:text-slate-700'"
+                    class="flex-1 py-3 text-sm transition">Pengaturan</button>
+            </div>
+
+            <div class="p-6">
+
+                <!-- === TAB PROFIL === -->
+                <div x-show="activeTab==='profile'">
+                    <form @submit.prevent="saveProfile" class="space-y-4">
+                        <div class="flex flex-col items-center mb-6">
+                            <div class="relative group w-20 h-20">
+                                <div
+                                    class="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold">
+                                    <img x-show="userProfile.photo" :src="userProfile.photo"
+                                        class="w-full h-full object-cover">
+                                    <span x-show="!userProfile.photo"
+                                        x-text="userProfile.name ? userProfile.name.charAt(0).toUpperCase() : 'R'"></span>
+                                </div>
+                                <label for="photo-upload"
+                                    class="absolute bottom-0 right-0 w-7 h-7 bg-blue-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-600 transition shadow-lg">
+                                    <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                </label>
+                                <input type="file" id="photo-upload" accept="image/*" class="hidden"
+                                    @change="uploadPhoto">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Nama
+                                Lengkap *</label>
+                            <input type="text" x-model="userProfile.name" required class="form-input"
+                                autocomplete="name">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Email
+                                *</label>
+                            <input type="email" x-model="userProfile.email" required class="form-input"
+                                autocomplete="email">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">No. HP
+                                / WA</label>
+                            <input type="tel" x-model="userProfile.phone" class="form-input" autocomplete="tel">
+                        </div>
+
+                        <div class="flex justify-end pt-2">
+                            <button type="submit" :disabled="saving" class="btn btn-primary disabled:opacity-50">
+                                <span x-show="!saving">Simpan Profil</span>
+                                <span x-show="saving" class="flex items-center gap-2">
+                                    <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                            stroke-width="4" />
+                                        <path class="opacity-75" fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                    </svg>
+                                    Menyimpan...
+                                </span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- === TAB SETTINGS (SUDAH DIPERBAIKI - NO WARNING) === -->
+                <div x-show="activeTab==='settings'">
+                    <form @submit.prevent="saveSettings" class="space-y-4">
+                        <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 space-y-4">
+                            <p class="font-600 text-sm">Ganti Kata Sandi</p>
+
+                            <!-- Hidden field ini penting untuk menghilangkan warning Chrome -->
+                            <input type="hidden" name="username"
+                                :value="userProfile.email || userProfile.name || 'pengurus'">
+
+                            <div>
+                                <label
+                                    class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Kata
+                                    Sandi Lama</label>
+                                <input type="password" x-model="settings.oldPassword" class="form-input"
+                                    autocomplete="current-password">
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Kata
+                                    Sandi Baru</label>
+                                <input type="password" x-model="settings.newPassword" minlength="6" class="form-input"
+                                    autocomplete="new-password">
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Konfirmasi
+                                    Sandi Baru</label>
+                                <input type="password" x-model="settings.confirmPassword" class="form-input"
+                                    autocomplete="new-password">
+                            </div>
+                        </div>
+
+                        <!-- Dark Mode -->
+                        <div
+                            class="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-800">
+                            <span class="text-sm">Mode Gelap</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" x-model="darkMode" class="sr-only peer">
+                                <div
+                                    class="w-11 h-6 bg-slate-200 peer-checked:bg-blue-500 rounded-full relative transition-colors 
+                                        after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white 
+                                        after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5">
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="flex justify-end">
+                            <button type="submit" :disabled="saving" class="btn btn-primary disabled:opacity-50">
+                                <span x-show="!saving">Simpan Pengaturan</span>
+                                <span x-show="saving">Menyimpan...</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- CDN Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="asset/js/script.js"></script>
+</body>
+
+</html>

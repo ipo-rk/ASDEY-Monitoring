@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="id" x-data="loginApp" :class="{ 'dark': darkMode }">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login — SIMASRA Asrama Deiyai Jayapura</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="asset/css/login.css">
+</head>
+
+<body>
+    <div class="scene">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <div class="page-wrap">
+        <header class="topbar">
+            <div class="topbar-brand">
+                <img src="asset/img/logo-login.png" alt="Logo ASDEI" class="topbar-logo">
+                <div>
+                    <div class="topbar-title">ASRAMA DEIYAI</div>
+                    <div class="topbar-sub">Kab. Deiyai &middot; Kota Studi Jayapura</div>
+                </div>
+            </div>
+            <button class="toggle-btn" @click="toggleDarkMode()" :title="darkMode ? 'Mode Terang' : 'Mode Gelap'">
+                <i x-show="!darkMode" class="fas fa-moon"></i>
+                <i x-show="darkMode" class="fas fa-sun" style="color:#fbbf24"></i>
+            </button>
+        </header>
+
+        <main class="main-area">
+            <div class="card">
+                <div class="brand-panel">
+                    <div class="logo-ring">
+                        <img src="asset/img/logo-login.png" alt="Logo ASDEI">
+                    </div>
+                    <div class="brand-name">ASDEI</div>
+                    <div class="brand-line"></div>
+                    <div class="brand-desc">
+                        Asrama Mahasiswa<br>
+                        Kabupaten Deiyai<br>
+                        Kota Studi Jayapura
+                    </div>
+                    <div class="brand-chip">
+                        <i class="fas fa-shield-halved"></i>SIMASRA v3.0
+                    </div>
+
+                    <!-- Quick demo login per role -->
+                    <div class="demo-box">
+                        <p class="demo-title"><i class="fas fa-bolt"></i> Coba Akun Demo</p>
+                        <div class="demo-grid">
+                            <button type="button" class="demo-chip" @click="quickLogin('admin')">
+                                <span class="demo-chip-icon"><i class="fas fa-user-shield"></i></span>
+                                <span class="demo-chip-text">
+                                    <span class="demo-chip-role">Admin</span>
+                                    <span class="demo-chip-user">admin</span>
+                                </span>
+                            </button>
+                            <button type="button" class="demo-chip" @click="quickLogin('pembina')">
+                                <span class="demo-chip-icon"><i class="fas fa-chalkboard-user"></i></span>
+                                <span class="demo-chip-text">
+                                    <span class="demo-chip-role">Pembina</span>
+                                    <span class="demo-chip-user">pembina</span>
+                                </span>
+                            </button>
+                            <button type="button" class="demo-chip" @click="quickLogin('penghuni')">
+                                <span class="demo-chip-icon"><i class="fas fa-user"></i></span>
+                                <span class="demo-chip-text">
+                                    <span class="demo-chip-role">Penghuni</span>
+                                    <span class="demo-chip-user">penghuni</span>
+                                </span>
+                            </button>
+                            <button type="button" class="demo-chip" @click="quickLogin('pimpinan')">
+                                <span class="demo-chip-icon"><i class="fas fa-building-user"></i></span>
+                                <span class="demo-chip-text">
+                                    <span class="demo-chip-role">Pimpinan</span>
+                                    <span class="demo-chip-user">pimpinan</span>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-panel">
+                    <div class="f-heading fu">Selamat Datang 👋</div>
+                    <div class="f-sub fu d1">Masuk ke panel administrasi asrama</div>
+
+                    <div x-show="errorMessage" x-transition class="err-box">
+                        <i class="fas fa-circle-exclamation"></i>
+                        <span x-text="errorMessage"></span>
+                    </div>
+
+                    <div class="f-field fu d2">
+                        <label class="f-label">Username</label>
+                        <div class="f-input-wrap">
+                            <input type="text" x-model="form.username" required autofocus
+                                placeholder="Masukkan username">
+                            <span class="f-icon"><i class="fas fa-user"></i></span>
+                        </div>
+                    </div>
+
+                    <div class="f-field fu d3">
+                        <label class="f-label">Kata Sandi</label>
+                        <div class="f-input-wrap">
+                            <input :type="showPassword ? 'text' : 'password'" x-model="form.password" required
+                                placeholder="Masukkan kata sandi">
+                            <button type="button" class="f-icon btn" @click="showPassword = !showPassword">
+                                <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="rem-row fu d4">
+                        <input type="checkbox" x-model="form.remember" id="remember">
+                        <label for="remember">Ingat saya</label>
+                    </div>
+
+                    <button class="btn-submit fu d5" @click="handleLogin" :disabled="loading">
+                        <template x-if="!loading">
+                            <span style="display:flex;align-items:center;gap:8px;">
+                                <i class="fas fa-right-to-bracket"></i>
+                                Masuk ke Dashboard
+                            </span>
+                        </template>
+                        <template x-if="loading">
+                            <span style="display:flex;align-items:center;gap:10px;">
+                                <span class="spin-ring"></span>
+                                Memproses...
+                            </span>
+                        </template>
+                    </button>
+
+                    <div class="f-footer fu d6">
+                        <a href="#">Lupa kata sandi?</a>
+                        <span>&middot;</span>
+                        <a href="#">Hubungi Admin</a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('loginApp', () => ({
+                darkMode: localStorage.theme === 'dark' ||
+                    (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches),
+                showPassword: false,
+                loading: false,
+                errorMessage: '',
+                form: {
+                    username: localStorage.getItem('rememberedUser') || '',
+                    password: '',
+                    remember: !!localStorage.getItem('rememberedUser'),
+                },
+
+                // Akun demo bawaan — harus identik dengan _seedDefaultUsers() di script.js
+                // Sumber kebenaran sesungguhnya adalah localStorage 'simasra_users' (dikelola
+                // lewat menu Manajemen Pengguna). Daftar di bawah ini hanya fallback untuk
+                // kunjungan pertama sebelum index.html pernah dijalankan.
+                defaultUsers: [
+                    { id: 1, username: 'admin', password: 'admin123', role: 'admin', nama: 'Admin SIMASRA', nik: null, active: true },
+                    { id: 2, username: 'pembina', password: 'pembina123', role: 'pembina', nama: 'Yulianus Kegou, S.Pd', nik: null, active: true },
+                    { id: 3, username: 'pimpinan', password: 'pimpinan123', role: 'pimpinan', nama: 'Kepala Bidang Kesra', nik: null, active: true },
+                    { id: 4, username: 'penghuni', password: 'penghuni123', role: 'penghuni', nama: 'Yohanis Duwiri', nik: '9102017501010001', active: true },
+                ],
+
+                init() {
+                    this.applyDark();
+                },
+
+                applyDark() {
+                    document.documentElement.classList.toggle('dark', this.darkMode);
+                    localStorage.theme = this.darkMode ? 'dark' : 'light';
+                },
+
+                toggleDarkMode() {
+                    this.darkMode = !this.darkMode;
+                    this.applyDark();
+                },
+
+                getUsers() {
+                    try {
+                        const raw = localStorage.getItem('simasra_users');
+                        const arr = raw ? JSON.parse(raw) : null;
+                        return Array.isArray(arr) && arr.length ? arr : this.defaultUsers;
+                    } catch { return this.defaultUsers; }
+                },
+
+                quickLogin(role) {
+                    const u = this.getUsers().find(x => x.role === role);
+                    if (!u) return;
+                    this.form.username = u.username;
+                    this.form.password = u.password;
+                    this.handleLogin();
+                },
+
+                async handleLogin() {
+                    this.errorMessage = '';
+
+                    if (!this.form.username.trim() || !this.form.password.trim()) {
+                        this.errorMessage = 'Username dan kata sandi wajib diisi.';
+                        return;
+                    }
+
+                    this.loading = true;
+                    await new Promise(r => setTimeout(r, 700));
+
+                    const uname = this.form.username.trim().toLowerCase();
+                    const pass = this.form.password.trim();
+                    const user = this.getUsers().find(u => u.username.toLowerCase() === uname);
+
+                    if (!user || user.password !== pass) {
+                        this.errorMessage = 'Username atau kata sandi salah. Silakan coba lagi.';
+                        this.loading = false;
+                        return;
+                    }
+                    if (user.active === false) {
+                        this.errorMessage = 'Akun ini telah dinonaktifkan. Hubungi admin.';
+                        this.loading = false;
+                        return;
+                    }
+
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('loggedInUser', user.username); // kompatibilitas versi lama
+                    localStorage.setItem('loggedInUsername', user.username);
+                    localStorage.setItem('loggedInRole', user.role);
+                    localStorage.setItem('loggedInUserId', String(user.id));
+                    localStorage.setItem('loggedInNik', user.nik || '');
+
+                    if (this.form.remember) {
+                        localStorage.setItem('rememberedUser', user.username);
+                    } else {
+                        localStorage.removeItem('rememberedUser');
+                    }
+
+                    const roleLabel = { admin: 'Administrator', pembina: 'Pembina Asrama', penghuni: 'Penghuni', pimpinan: 'Pimpinan' }[user.role] || user.role;
+
+                    await Swal.fire({
+                        title: 'Login Berhasil!',
+                        text: `Selamat datang, ${user.nama} (${roleLabel})`,
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false,
+                        allowOutsideClick: false
+                    });
+
+                    window.location.replace('index.html');
+                    this.loading = false;
+                }
+            }));
+        });
+    </script>
+</body>
+
+</html>
