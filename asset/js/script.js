@@ -25,10 +25,10 @@ document.addEventListener('alpine:init', () => {
         // ══════════════════════════════════════════════
         // ROLE & AKSES (RBAC) — diisi dari data login (login.html)
         // ══════════════════════════════════════════════
-        currentRole: localStorage.getItem('loggedInRole') || 'penghuni',
-        currentUsername: localStorage.getItem('loggedInUsername') || localStorage.getItem('loggedInUser') || '',
-        currentUserId: localStorage.getItem('loggedInUserId') || '',
-        currentNik: localStorage.getItem('loggedInNik') || '',
+        currentRole: sessionStorage.getItem('loggedInRole') || 'penghuni',
+        currentUsername: sessionStorage.getItem('loggedInUsername') || sessionStorage.getItem('loggedInUser') || '',
+        currentUserId: sessionStorage.getItem('loggedInUserId') || '',
+        currentNik: sessionStorage.getItem('loggedInNik') || '',
 
         ROLE_LABEL: {
             admin: 'Administrator',
@@ -74,7 +74,9 @@ document.addEventListener('alpine:init', () => {
         filterStatusPresensi: '',
         dashboardScannerActive: false,
         scannerOpen: false,
+        scannerFacingMode: 'environment', // 'environment' (kamera belakang) | 'user' (kamera depan)
         scanFeedback: null,
+
 
         // Modal — Kartu Anggota (QR)
         kartuModalOpen: false,
@@ -99,10 +101,14 @@ document.addEventListener('alpine:init', () => {
         aktivitasForm: {},
         filterJenisAktivitas: '',
 
-        // Modal — MANAJEMEN PENGGUNA
+        // Modal & filter — MANAJEMEN PENGGUNA
         userModalOpen: false,
         isEditUser: false,
         userForm: {},
+        searchUserQuery: '',
+        filterRoleUser: '',
+        currentPageUser: 1,
+        itemsPerPageUser: 8,
 
         // Instance scanner QR aktif (internal)
         _qrScannerInstance: null,
@@ -115,11 +121,12 @@ document.addEventListener('alpine:init', () => {
         inventaris: [],
 
         userProfile: {
-            name: 'Richy Rizaldo',
-            email: 'richy.rizaldo@example.com',
-            phone: '0812-3456-7890',
+            name: '',
+            email: '',
+            phone: '',
             photo: ''
         },
+
 
         settings: {
             oldPassword: '',
@@ -396,18 +403,45 @@ document.addEventListener('alpine:init', () => {
         get persenRusakBerat() { return this.totalInventaris ? Math.round((this.totalRusakBerat / this.totalInventaris) * 100) : 0; },
 
         // ══════════════════════════════════════════════
-        // GETTERS & HELPER — ROLE / AKSES
+        // GETTERS & HELPER — ROLE / AKSES / PROFIL
         // ══════════════════════════════════════════════
         hasAccess(page) {
             return (this.ROLE_ACCESS[this.currentRole] || []).includes(page);
         },
         isAdmin() { return this.currentRole === 'admin'; },
+        isPembina() { return this.currentRole === 'pembina'; },
+        isPimpinan() { return this.currentRole === 'pimpinan'; },
+        isPenghuni() { return this.currentRole === 'penghuni'; },
         isAdminOrPembina() { return this.currentRole === 'admin' || this.currentRole === 'pembina'; },
 
         get myPenghuni() {
-            if (!this.currentNik) return null;
-            return this.penghuni.find(p => p.nik === this.currentNik) || null;
+            const targetNik = this.currentNik || this._currentUserRecord()?.nik;
+            if (!targetNik) return null;
+            return this.penghuni.find(p => p.nik === targetNik) || null;
         },
+
+        get currentDisplayName() {
+            // Prioritas 1: Jika role penghuni, selalu sinkron dengan nama di master data penghuni
+            if (this.currentRole === 'penghuni') {
+                if (this.myPenghuni && this.myPenghuni.nama) return this.myPenghuni.nama;
+                const akun = this._currentUserRecord();
+                if (akun && akun.nama) return akun.nama;
+            }
+            // Prioritas 2: Nama dari userProfile jika ada
+            if (this.userProfile && this.userProfile.name && this.userProfile.name.trim()) {
+                return this.userProfile.name.trim();
+            }
+            // Prioritas 3: Akun pengguna dari tabel users
+            const akun = this._currentUserRecord();
+            if (akun && akun.nama) return akun.nama;
+            return this.ROLE_LABEL[this.currentRole] || 'Pengguna';
+        },
+
+        get currentUserInitial() {
+            const name = this.currentDisplayName;
+            return name ? name.charAt(0).toUpperCase() : (this.ROLE_LABEL[this.currentRole] ? this.ROLE_LABEL[this.currentRole].charAt(0).toUpperCase() : 'U');
+        },
+
 
         get penghuniAktifList() {
             return this.penghuni
@@ -431,6 +465,7 @@ document.addEventListener('alpine:init', () => {
             return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
         },
 
+
         // ══════════════════════════════════════════════
         // GETTERS — PRESENSI
         // ══════════════════════════════════════════════
@@ -439,17 +474,41 @@ document.addEventListener('alpine:init', () => {
             return this.presensi.filter(r => r.tanggal === today);
         },
         get hadirHariIni() { return this.presensiHariIni.length; },
-        get izinHariIniCount() {
-            return this.izin.filter(i => i.status === 'disetujui').length;
+
+        // Set NIK penghuni yang izinnya aktif HARI INI:
+        // status=disetujui DAN tanggalKeluar <= hari ini DAN estimasiKembali >= hari ini
+        get izinHariIniNiks() {
+            const today = new Date().toISOString().slice(0, 10);
+            const niks = new Set();
+            this.izin.forEach(i => {
+                if (i.status !== 'disetujui') return;
+                const tgl = (i.tanggalKeluar || '').slice(0, 10);
+                const est = (i.estimasiKembali || '').slice(0, 10);
+                if (tgl <= today && est >= today) niks.add(i.nik);
+            });
+            return niks;
         },
+
+        // Jumlah penghuni yang sedang izin aktif hari ini
+        get izinHariIniCount() {
+            return this.izinHariIniNiks.size;
+        },
+
+        // Tidak hadir = penghuni aktif yang tidak presensi DAN tidak sedang izin hari ini
         get tidakHadirHariIni() {
             const hadirNiks = new Set(this.presensiHariIni.map(r => r.nik));
-            const izinNiks = new Set(this.izin.filter(i => i.status === 'disetujui').map(i => i.nik));
+            const izinNiks = this.izinHariIniNiks;
             return this.penghuniAktifList.filter(p => !hadirNiks.has(p.nik) && !izinNiks.has(p.nik)).length;
         },
+
+        // Persentase kehadiran = hadir / (aktif - sedang izin hari ini) × 100
+        // Jika semua penghuni sedang izin → 0 (bukan NaN)
         get persenKehadiranHariIni() {
             const total = this.penghuniAktifList.length;
-            return total ? Math.round((this.hadirHariIni / total) * 100) : 0;
+            const izin = this.izinHariIniNiks.size;
+            const efektif = total - izin;
+            if (efektif <= 0) return total > 0 ? 100 : 0;
+            return Math.round((this.hadirHariIni / efektif) * 100);
         },
         get filteredPresensi() {
             let r = [...this.presensi];
@@ -509,7 +568,29 @@ document.addEventListener('alpine:init', () => {
         // ══════════════════════════════════════════════
         // GETTERS — PENGGUNA
         // ══════════════════════════════════════════════
-        get filteredUsers() { return this.users; },
+        get totalUserAdmin() { return this.users.filter(u => u.role === 'admin').length; },
+        get totalUserPembina() { return this.users.filter(u => u.role === 'pembina').length; },
+        get totalUserPenghuni() { return this.users.filter(u => u.role === 'penghuni').length; },
+        get totalUserPimpinan() { return this.users.filter(u => u.role === 'pimpinan').length; },
+        get filteredUsersAll() {
+            let r = [...this.users];
+            if (this.filterRoleUser) r = r.filter(u => u.role === this.filterRoleUser);
+            const q = (this.searchUserQuery || '').toLowerCase().trim();
+            if (q) {
+                r = r.filter(u =>
+                    (u.nama || '').toLowerCase().includes(q) ||
+                    (u.username || '').toLowerCase().includes(q) ||
+                    (u.nik || '').includes(q) ||
+                    (this.ROLE_LABEL[u.role] || '').toLowerCase().includes(q)
+                );
+            }
+            return r;
+        },
+        get filteredUsers() {
+            const all = this.filteredUsersAll;
+            const s = (this.currentPageUser - 1) * this.itemsPerPageUser;
+            return all.slice(s, s + this.itemsPerPageUser);
+        },
 
         // ══════════════════════════════════════════════
         // GETTERS — NOTIFIKASI
@@ -570,14 +651,78 @@ document.addEventListener('alpine:init', () => {
             this.saveToStorage();
         },
 
+        // ══════════════════════════════════════════════
+        // PROFIL PENGGUNA — per akun (bukan blob global)
+        // Setiap username punya kunci penyimpanan sendiri agar saat berpindah
+        // akun/role (logout-login atau login di tab lain), foto/nama/email yang
+        // tampil di toggle profile SELALU milik akun yang sedang login, bukan
+        // sisa akun sebelumnya.
+        // ══════════════════════════════════════════════
+        _getUsersRaw() {
+            try {
+                const raw = localStorage.getItem(this.STORAGE_KEYS.USERS);
+                const arr = raw ? JSON.parse(raw) : null;
+                return Array.isArray(arr) && arr.length ? arr : this._seedDefaultUsers();
+            } catch { return this._seedDefaultUsers(); }
+        },
+
+        // Cari data akun yang sedang login. Pakai this.users kalau sudah dimuat,
+        // kalau belum (dipanggil sebelum loadExtraData) baca langsung dari localStorage.
+        _currentUserRecord() {
+            const list = (this.users && this.users.length) ? this.users : this._getUsersRaw();
+            return list.find(u => String(u.id) === String(this.currentUserId))
+                || list.find(u => (u.username || '').toLowerCase() === (this.currentUsername || '').toLowerCase())
+                || null;
+        },
+
+        _profileStorageKey() {
+            const uname = (this.currentUsername || 'guest').toLowerCase();
+            return `${this.STORAGE_KEYS.USER_PROFILE}::${uname}`;
+        },
+
+        _settingsStorageKey() {
+            const uname = (this.currentUsername || 'guest').toLowerCase();
+            return `${this.STORAGE_KEYS.USER_SETTINGS}::${uname}`;
+        },
+
+        // Profil bawaan diambil dari data akun login & master penghuni,
+        // BUKAN nama hardcode, supaya konsisten dengan role yang sedang aktif.
+        _defaultProfileForCurrentUser() {
+            let nama = '';
+            let phone = '';
+            if (this.currentRole === 'penghuni' && this.myPenghuni) {
+                nama = this.myPenghuni.nama || '';
+                phone = this.myPenghuni.no_hp || '';
+            } else {
+                const u = this._currentUserRecord();
+                nama = u?.nama || this.ROLE_LABEL[this.currentRole] || 'Pengguna';
+            }
+            const emailSlug = (this.currentUsername || 'user').toLowerCase().replace(/[^a-z0-9]/g, '');
+            return { name: nama, email: `${emailSlug}@simasra.local`, phone: phone, photo: '' };
+        },
+
         loadUserData() {
             try {
-                const p = localStorage.getItem(this.STORAGE_KEYS.USER_PROFILE);
-                if (p) this.userProfile = { ...this.userProfile, ...JSON.parse(p) };
-                const s = localStorage.getItem(this.STORAGE_KEYS.USER_SETTINGS);
-                if (s) this.settings = { ...this.settings, ...JSON.parse(s) };
+                const base = this._defaultProfileForCurrentUser();
+                const p = localStorage.getItem(this._profileStorageKey());
+                let parsed = p ? JSON.parse(p) : {};
+
+                // Pastikan jika role penghuni, nama di profile selalu sinkron dengan data penghuni
+                if (this.currentRole === 'penghuni' && this.myPenghuni && this.myPenghuni.nama) {
+                    parsed.name = this.myPenghuni.nama;
+                    if (this.myPenghuni.no_hp) parsed.phone = this.myPenghuni.no_hp;
+                } else if (!parsed.name) {
+                    parsed.name = base.name;
+                }
+
+                this.userProfile = { ...base, ...parsed };
+
+                const defaultSettings = { oldPassword: '', newPassword: '', confirmPassword: '', emailNotifications: true };
+                const s = localStorage.getItem(this._settingsStorageKey());
+                this.settings = s ? { ...defaultSettings, ...JSON.parse(s), oldPassword: '', newPassword: '', confirmPassword: '' } : defaultSettings;
             } catch (e) { console.warn('loadUserData:', e); }
         },
+
 
         saveToStorage() {
             try {
@@ -591,8 +736,10 @@ document.addEventListener('alpine:init', () => {
 
         saveUserData() {
             try {
-                localStorage.setItem(this.STORAGE_KEYS.USER_PROFILE, JSON.stringify(this.userProfile));
-                localStorage.setItem(this.STORAGE_KEYS.USER_SETTINGS, JSON.stringify(this.settings));
+                localStorage.setItem(this._profileStorageKey(), JSON.stringify(this.userProfile));
+                // Jangan pernah menyimpan password mentah ke storage pengaturan tampilan
+                const { oldPassword, newPassword, confirmPassword, ...persistedSettings } = this.settings;
+                localStorage.setItem(this._settingsStorageKey(), JSON.stringify(persistedSettings));
             } catch (e) { console.warn('saveUserData:', e); }
         },
 
@@ -746,28 +893,59 @@ document.addEventListener('alpine:init', () => {
                 this.scanFeedback = { type: 'error', text: 'Pustaka pemindai QR gagal dimuat.' };
                 return;
             }
-            this._stopQrScanner();
-            const scanner = new Html5Qrcode(elementId);
-            this._qrScannerInstance = scanner;
-            scanner.start(
-                { facingMode: 'environment' },
-                { fps: 10, qrbox: 220 },
-                (decodedText) => onSuccess(decodedText),
-                () => { /* abaikan error per-frame */ }
-            ).catch(() => {
-                this.scanFeedback = { type: 'error', text: 'Tidak dapat mengakses kamera. Periksa izin kamera browser Anda.' };
+            this._stopQrScanner().then(() => {
+                const scanner = new Html5Qrcode(elementId);
+                this._qrScannerInstance = scanner;
+                const facing = this.scannerFacingMode || 'environment';
+                scanner.start(
+                    { facingMode: facing },
+                    { fps: 10, qrbox: { width: 220, height: 220 } },
+                    (decodedText) => onSuccess(decodedText),
+                    () => { /* abaikan error per-frame */ }
+                ).catch((err) => {
+                    console.warn('Scanner start error:', err);
+                    this.scanFeedback = {
+                        type: 'error',
+                        text: `Tidak dapat mengakses ${facing === 'user' ? 'kamera depan' : 'kamera belakang'}. Periksa izin kamera di browser Anda.`
+                    };
+                });
             });
         },
 
         _stopQrScanner() {
-            if (this._qrScannerInstance) {
-                try {
-                    this._qrScannerInstance.stop().then(() => {
-                        try { this._qrScannerInstance.clear(); } catch (e) { /* abaikan */ }
-                    }).catch(() => { /* abaikan */ });
-                } catch (e) { /* abaikan */ }
-                this._qrScannerInstance = null;
-            }
+            return new Promise((resolve) => {
+                if (this._qrScannerInstance) {
+                    try {
+                        this._qrScannerInstance.stop().then(() => {
+                            try { this._qrScannerInstance.clear(); } catch (e) { /* abaikan */ }
+                            this._qrScannerInstance = null;
+                            resolve();
+                        }).catch(() => {
+                            try { this._qrScannerInstance.clear(); } catch (e) { /* abaikan */ }
+                            this._qrScannerInstance = null;
+                            resolve();
+                        });
+                    } catch (e) {
+                        this._qrScannerInstance = null;
+                        resolve();
+                    }
+                } else {
+                    resolve();
+                }
+            });
+        },
+
+        switchCamera(targetElementId = null) {
+            this.scannerFacingMode = (this.scannerFacingMode === 'environment') ? 'user' : 'environment';
+            const elId = targetElementId || (this.scannerOpen ? 'qr-reader' : 'qr-reader-dashboard');
+            this.scanFeedback = {
+                type: 'info',
+                text: `Beralih ke ${this.scannerFacingMode === 'user' ? 'Kamera Depan' : 'Kamera Belakang'}...`
+            };
+            this._startQrScanner(elId, (nik) => {
+                const r = this._catatPresensi(nik, 'qr');
+                this.scanFeedback = { type: r.ok ? 'success' : 'error', text: r.msg };
+            });
         },
 
         openScanner() {
@@ -802,41 +980,318 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+
         // ══════════════════════════════════════════════
-        // KARTU ANGGOTA (QR)
+        // KARTU ANGGOTA (QR & IDENTITAS RESMI)
         // ══════════════════════════════════════════════
         _renderQR(elId, text) {
             const el = document.getElementById(elId);
             if (!el || typeof QRCode === 'undefined') return;
             el.innerHTML = '';
-            new QRCode(el, { text: text || '-', width: 160, height: 160, colorDark: '#0f172a', colorLight: '#ffffff' });
+            new QRCode(el, { text: text || '-', width: 140, height: 140, colorDark: '#0f172a', colorLight: '#ffffff' });
+        },
+
+        _getQrDataUrl(text, size = 240) {
+            return new Promise((resolve) => {
+                if (typeof QRCode === 'undefined') { resolve(''); return; }
+                const tempDiv = document.createElement('div');
+                tempDiv.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;';
+                document.body.appendChild(tempDiv);
+                try {
+                    new QRCode(tempDiv, {
+                        text: text || '-',
+                        width: size,
+                        height: size,
+                        colorDark: '#0f172a',
+                        colorLight: '#ffffff'
+                    });
+                    setTimeout(() => {
+                        const img = tempDiv.querySelector('img');
+                        const canvas = tempDiv.querySelector('canvas');
+                        let src = '';
+                        if (img && img.src && img.src.startsWith('data:')) {
+                            src = img.src;
+                        } else if (canvas) {
+                            src = canvas.toDataURL('image/png');
+                        }
+                        tempDiv.remove();
+                        resolve(src);
+                    }, 80);
+                } catch (err) {
+                    tempDiv.remove();
+                    resolve('');
+                }
+            });
+        },
+
+        get kartuPhoto() {
+            if (!this.kartuPenghuni) return '';
+            // Jika kartu yang dibuka adalah akun yang sedang login, gunakan foto profil aktif
+            if (this.kartuPenghuni.nik === this.currentNik && this.userProfile?.photo) {
+                return this.userProfile.photo;
+            }
+            return this.kartuPenghuni.photo || '';
         },
 
         openKartuAnggota(p) {
-            if (!p) {
-                Swal.fire('Info', 'Data penghuni Anda belum terhubung. Silakan hubungi admin.', 'info');
+            let target = p;
+            if (!target) {
+                target = this.myPenghuni;
+                if (!target && this.currentNik) {
+                    target = this.penghuni.find(x => x.nik === this.currentNik);
+                }
+                if (!target) {
+                    const u = this._currentUserRecord();
+                    if (u && u.nik) target = this.penghuni.find(x => x.nik === u.nik);
+                }
+            }
+            if (!target) {
+                Swal.fire('Info', 'Data penghuni belum terhubung dengan akun ini. Silakan hubungi admin.', 'info');
                 return;
             }
-            this.kartuPenghuni = p;
+            // Selalu ambil versi paling mutakhir dari master data
+            const latest = this.penghuni.find(x => x.nik === target.nik) || target;
+            this.kartuPenghuni = { ...latest };
             this.kartuModalOpen = true;
-            this.$nextTick(() => this._renderQR('qr-kartu-anggota', p.nik));
+            this.$nextTick(() => this._renderQR('qr-kartu-anggota', latest.nik));
         },
 
-        downloadKartu(canvasId, nik) {
-            const elId = canvasId || 'qr-kartu-anggota';
+        async downloadKartu(canvasId, nik) {
             const targetNik = nik || (this.kartuPenghuni ? this.kartuPenghuni.nik : this.currentNik);
-            const el = document.getElementById(elId);
-            const img = el ? el.querySelector('img') : null;
-            const canvas = el ? el.querySelector('canvas') : null;
-            const src = img ? img.src : (canvas ? canvas.toDataURL('image/png') : null);
-            if (!src) { Swal.fire('Gagal', 'QR belum siap, coba lagi sesaat lagi.', 'error'); return; }
-            const a = document.createElement('a');
-            a.href = src;
-            a.download = `kartu-${targetNik || 'anggota'}.png`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
+            const p = (targetNik ? this.penghuni.find(x => x.nik === targetNik) : null) || this.kartuPenghuni || this.myPenghuni;
+            const nama = p?.nama || this.currentDisplayName || 'Penghuni Asrama';
+            const nikText = targetNik || p?.nik || '-';
+            const distrik = p?.distrik ? `${p.distrik} · ${p.jenjang || 'Penghuni'}` : 'Asrama Kabupaten Deiyai';
+            const kamar = this.getKamarSaatIni(p) || 'Asrama Deiyai Jayapura';
+
+            // 1. Dapatkan Data URL QR Code
+            let qrSrc = await this._getQrDataUrl(nikText, 240);
+            if (!qrSrc) {
+                const elId = canvasId || 'qr-kartu-anggota';
+                const el = document.getElementById(elId);
+                const img = el ? el.querySelector('img') : null;
+                const canvas = el ? el.querySelector('canvas') : null;
+                qrSrc = img ? img.src : (canvas ? canvas.toDataURL('image/png') : null);
+            }
+
+            if (!qrSrc) {
+                Swal.fire('Gagal', 'QR Code sedang disiapkan, silakan coba beberapa saat lagi.', 'warning');
+                return;
+            }
+
+            // 2. Buat Canvas ID Card Resmi Resolusi Tinggi (500 x 680 px)
+            const c = document.createElement('canvas');
+            c.width = 500;
+            c.height = 680;
+            const ctx = c.getContext('2d');
+
+            // Background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, 500, 680);
+
+            // Header Gradient Biru-Indigo
+            const grad = ctx.createLinearGradient(0, 0, 500, 0);
+            grad.addColorStop(0, '#2563eb');
+            grad.addColorStop(0.5, '#4f46e5');
+            grad.addColorStop(1, '#7c3aed');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 500, 140);
+
+            // Header Teks
+            ctx.fillStyle = '#bfdbfe';
+            ctx.font = 'bold 12px "Plus Jakarta Sans", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('PEMERINTAH KABUPATEN DEIYAI', 250, 32);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '800 18px "Plus Jakarta Sans", sans-serif';
+            ctx.fillText('ASRAMA KABUPATEN DEIYAI', 250, 60);
+
+            ctx.fillStyle = '#e0e7ff';
+            ctx.font = '500 12px "DM Sans", sans-serif';
+            ctx.fillText('Kota Studi Jayapura · Papua', 250, 82);
+
+            // Pill Badge
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+            ctx.beginPath();
+            if (ctx.roundRect) {
+                ctx.roundRect(150, 96, 200, 24, 12);
+            } else {
+                ctx.rect(150, 96, 200, 24);
+            }
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 11px "Plus Jakarta Sans", sans-serif';
+            ctx.fillText('KARTU PRESENSI RESMI', 250, 112);
+
+            // Nama & NIK
+            ctx.fillStyle = '#0f172a';
+            ctx.font = '800 20px "Plus Jakarta Sans", sans-serif';
+            ctx.fillText(nama, 250, 178);
+
+            ctx.fillStyle = '#64748b';
+            ctx.font = '600 13px monospace';
+            ctx.fillText(`NIK: ${nikText}`, 250, 202);
+
+            // Info Box
+            ctx.fillStyle = '#f8fafc';
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            if (ctx.roundRect) {
+                ctx.roundRect(40, 218, 420, 56, 10);
+            } else {
+                ctx.rect(40, 218, 420, 56);
+            }
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = '#475569';
+            ctx.font = '600 12px "DM Sans", sans-serif';
+            ctx.fillText(distrik, 250, 240);
+            ctx.fillStyle = '#2563eb';
+            ctx.font = 'bold 12px "Plus Jakarta Sans", sans-serif';
+            ctx.fillText(`Kamar: ${kamar}`, 250, 260);
+
+            // 3. Gambar QR Code
+            const qrImg = new Image();
+            qrImg.crossOrigin = 'anonymous';
+            qrImg.onload = () => {
+                // Background QR
+                ctx.fillStyle = '#ffffff';
+                ctx.strokeStyle = '#cbd5e1';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                if (ctx.roundRect) {
+                    ctx.roundRect(140, 292, 220, 220, 16);
+                } else {
+                    ctx.rect(140, 292, 220, 220);
+                }
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.drawImage(qrImg, 150, 302, 200, 200);
+
+                // Petunjuk
+                ctx.fillStyle = '#64748b';
+                ctx.font = '500 12px "DM Sans", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Tunjukkan QR ini di gerbang asrama untuk presensi', 250, 542);
+
+                // Footer
+                ctx.fillStyle = '#f1f5f9';
+                ctx.fillRect(0, 580, 500, 100);
+                ctx.strokeStyle = '#e2e8f0';
+                ctx.beginPath();
+                ctx.moveTo(0, 580);
+                ctx.lineTo(500, 580);
+                ctx.stroke();
+
+                // Status Dot & Teks
+                ctx.fillStyle = '#22c55e';
+                ctx.beginPath();
+                ctx.arc(60, 630, 5, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#166534';
+                ctx.font = 'bold 12px "Plus Jakarta Sans", sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText('Status: Penghuni Aktif', 72, 634);
+
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '500 11px "DM Sans", sans-serif';
+                ctx.textAlign = 'right';
+                ctx.fillText('SIMASRA · Deiyai 2026', 450, 634);
+
+                // Unduh File
+                const cleanName = nama.replace(/[^a-zA-Z0-9_-]/g, '_');
+                const downloadUrl = c.toDataURL('image/png');
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = `KTA_QR_${nikText}_${cleanName}.png`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Kartu QR Berhasil Diunduh!',
+                    text: `File KTA_QR_${nikText}_${cleanName}.png telah tersimpan`,
+                    timer: 1800,
+                    showConfirmButton: false
+                });
+            };
+            qrImg.src = qrSrc;
         },
+
+
+        async printKartu() {
+            const el = document.getElementById('kta-card-print');
+            if (!el) { window.print(); return; }
+
+            const targetNik = this.kartuPenghuni ? this.kartuPenghuni.nik : this.currentNik;
+            const p = (targetNik ? this.penghuni.find(x => x.nik === targetNik) : null) || this.kartuPenghuni || this.myPenghuni;
+            const nama = p?.nama || this.currentDisplayName || 'Penghuni';
+
+            // 1. Dapatkan Data URL QR Code secara pasti
+            let qrSrc = await this._getQrDataUrl(targetNik, 200);
+            if (!qrSrc) {
+                const qrEl = document.getElementById('qr-kartu-anggota');
+                const img = qrEl ? qrEl.querySelector('img') : null;
+                const canvas = qrEl ? qrEl.querySelector('canvas') : null;
+                qrSrc = (img && img.src && img.src.startsWith('data:')) ? img.src : (canvas ? canvas.toDataURL('image/png') : '');
+            }
+
+            // 2. Clone elemen KTA dan gantikan container canvas dengan elemen img mandiri
+            const clone = el.cloneNode(true);
+            const qrContainer = clone.querySelector('#qr-kartu-anggota');
+            if (qrContainer && qrSrc) {
+                qrContainer.innerHTML = `<img src="${qrSrc}" alt="QR Code Presensi" style="width:140px;height:140px;display:block;margin:0 auto;border-radius:8px;" />`;
+            }
+
+            // 3. Buka jendela print baru
+            const printWindow = window.open('', '_blank', 'width=750,height=950');
+            if (!printWindow) {
+                Swal.fire('Info', 'Jendela cetak diblokir oleh browser. Silakan izinkan pop-up pada browser Anda.', 'info');
+                return;
+            }
+
+            printWindow.document.open();
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html lang="id">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>KTA - ${nama}</title>
+                    <script src="https://cdn.tailwindcss.com"></script>
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+                    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+                    <style>
+                        * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+                        body { font-family: 'DM Sans', sans-serif; background-color: #f8fafc; margin: 0; padding: 24px; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+                        @media print {
+                            body { background: transparent !important; padding: 0 !important; min-height: auto !important; }
+                            .no-print { display: none !important; }
+                            .print-card { box-shadow: none !important; border: 1px solid #cbd5e1 !important; page-break-inside: avoid; margin: 0 auto; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="print-card w-full max-w-sm bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
+                        ${clone.innerHTML}
+                    </div>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.focus();
+
+            setTimeout(() => {
+                printWindow.print();
+            }, 600);
+        },
+
+
 
         // ══════════════════════════════════════════════
         // IZIN KELUAR / MASUK
@@ -1023,30 +1478,116 @@ document.addEventListener('alpine:init', () => {
 
         openEditUserModal(u) {
             this.isEditUser = true;
-            this.userForm = { ...u };
+            // Ambil nama terbaru jika akun penghuni terhubung ke data master penghuni
+            let namaTerkini = u.nama;
+            if (u.role === 'penghuni' && u.nik) {
+                const p = this.penghuni.find(x => x.nik === u.nik);
+                if (p && p.nama) namaTerkini = p.nama;
+            }
+            this.userForm = { ...u, nama: namaTerkini, nik: u.nik || '' };
             this.userModalOpen = true;
         },
 
+        onUserRoleChange() {
+            if (this.userForm.role !== 'penghuni') {
+                this.userForm.nik = '';
+            } else {
+                if (this.userForm.nik) {
+                    this.onUserPenghuniSelect();
+                }
+            }
+        },
+
+        onUserPenghuniSelect() {
+            if (this.userForm.role === 'penghuni' && this.userForm.nik) {
+                const p = this.penghuni.find(x => x.nik === this.userForm.nik);
+                if (p) {
+                    // Otomatis sinkronkan field Nama Lengkap dengan nama penghuni yang dipilih
+                    this.userForm.nama = p.nama;
+                    // Jika username masih kosong, usulkan username default
+                    if (!this.userForm.username && !this.isEditUser) {
+                        const cleanName = (p.nama || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+                        this.userForm.username = cleanName || ('penghuni_' + p.nik.slice(-4));
+                    }
+                }
+            }
+        },
+
         simpanUser() {
-            if (!this.userForm.username || !this.userForm.password || !this.userForm.nama) {
-                Swal.fire('Lengkapi Data', 'Username, kata sandi, dan nama wajib diisi.', 'warning');
+            if (!this.userForm.username?.trim() || !this.userForm.password?.trim() || !this.userForm.nama?.trim()) {
+                Swal.fire('Lengkapi Data', 'Username, kata sandi, dan nama lengkap wajib diisi.', 'warning');
                 return;
             }
-            const uname = this.userForm.username.trim().toLowerCase();
-            const dup = this.users.find(u => u.username.toLowerCase() === uname && u.id !== this.userForm.id);
+            if (this.userForm.role === 'penghuni' && !this.userForm.nik) {
+                Swal.fire('Pilih Penghuni', 'Untuk role Penghuni, silakan pilih keterkaitan Data Penghuni.', 'warning');
+                return;
+            }
+            const uname = this.userForm.username.trim();
+            const unameLower = uname.toLowerCase();
+            const dup = this.users.find(u => u.username.toLowerCase() === unameLower && u.id !== this.userForm.id);
             if (dup) {
                 Swal.fire('Gagal', 'Username sudah digunakan oleh akun lain.', 'error');
                 return;
             }
+
+            const userData = {
+                ...this.userForm,
+                username: uname,
+                nama: this.userForm.nama.trim(),
+                password: this.userForm.password.trim(),
+                nik: this.userForm.role === 'penghuni' ? (this.userForm.nik || '') : null
+            };
+
+            const isCurrentLoggedIn = (this.isEditUser && (
+                String(this.userForm.id) === String(this.currentUserId) ||
+                (this.userForm.username || '').toLowerCase() === (this.currentUsername || '').toLowerCase()
+            ));
+
             if (this.isEditUser) {
                 const idx = this.users.findIndex(x => x.id === this.userForm.id);
-                if (idx !== -1) this.users[idx] = { ...this.userForm };
+                if (idx !== -1) this.users[idx] = { ...this.users[idx], ...userData };
             } else {
-                this.users.push({ id: Date.now(), ...this.userForm });
+                const newUser = { id: Date.now(), ...userData };
+                this.users.push(newUser);
             }
+
+            // SINKRONISASI KE MASTER DATA PENGHUNI:
+            // Jika akun penghuni dan ada NIK, sinkronkan nama di master data penghuni!
+            if (userData.role === 'penghuni' && userData.nik) {
+                const pIdx = this.penghuni.findIndex(p => p.nik === userData.nik);
+                if (pIdx !== -1) {
+                    this.penghuni[pIdx].nama = userData.nama;
+                    this.saveToStorage();
+                }
+            }
+
+            // SINKRONISASI KE AKUN YANG SEDANG LOGIN SAAT INI:
+            if (isCurrentLoggedIn) {
+                this.userProfile.name = userData.nama;
+                this.currentUsername = userData.username;
+                this.currentRole = userData.role;
+                this.currentNik = userData.nik || '';
+
+                sessionStorage.setItem('loggedInUsername', userData.username);
+                sessionStorage.setItem('loggedInUser', userData.username);
+                sessionStorage.setItem('loggedInRole', userData.role);
+                sessionStorage.setItem('loggedInNik', userData.nik || '');
+
+                this.saveUserData();
+            }
+
             this.saveExtraData();
             this.userModalOpen = false;
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: this.isEditUser ? 'Data akun berhasil diperbarui dan disinkronkan' : 'Akun baru berhasil ditambahkan dan disinkronkan',
+                timer: 1600,
+                showConfirmButton: false
+            });
         },
+
 
         toggleUserActive(u) {
             u.active = !u.active;
@@ -1086,27 +1627,22 @@ document.addEventListener('alpine:init', () => {
         _isCanvasReady(canvasId) {
             const canvas = document.getElementById(canvasId);
             if (!canvas) return false;
-            let el = canvas;
-            while (el && el !== document.body) {
-                const style = window.getComputedStyle(el);
-                if (style.display === 'none' || style.visibility === 'hidden') return false;
-                el = el.parentElement;
-            }
-            return !(canvas.offsetWidth === 0 && canvas.offsetHeight === 0);
+            // Gunakan offsetParent (O(1)) yang sangat cepat tanpa layout reflow berulang
+            return canvas.offsetParent !== null && canvas.clientWidth > 0 && canvas.clientHeight > 0;
         },
 
         // ══════════════════════════════════════════════
         // INIT
         // ══════════════════════════════════════════════
         init() {
-            const isLoggedIn = localStorage.getItem('isLoggedIn');
+            const isLoggedIn = sessionStorage.getItem('isLoggedIn');
             if (!isLoggedIn || isLoggedIn !== 'true') {
                 window.location.replace('login.html');
                 return;
             }
             this.loadFromStorage();
+            this.loadExtraData();   // muat this.users dulu, agar profil default sesuai akun login
             this.loadUserData();
-            this.loadExtraData();
             this.updateDarkMode();
 
             // Jika halaman awal tidak diizinkan untuk role ini, alihkan ke dashboard
@@ -1121,7 +1657,12 @@ document.addEventListener('alpine:init', () => {
             this.$watch('inventaris', () => this.saveToStorage());
             this.$watch('userProfile', () => this.saveUserData());
             this.$watch('settings', () => this.saveUserData());
-            this.$watch('presensi', () => this.saveExtraData());
+            this.$watch('presensi', () => {
+                this.saveExtraData();
+                // Update grafik kehadiran mingguan real-time saat ada presensi baru
+                if (this.currentPage === 'dashboard' && this.currentRole !== 'penghuni')
+                    this._scheduleChartRender(150);
+            });
             this.$watch('izin', () => this.saveExtraData());
             this.$watch('pelanggaran', () => this.saveExtraData());
             this.$watch('aktivitas', () => this.saveExtraData());
@@ -1130,41 +1671,47 @@ document.addEventListener('alpine:init', () => {
             this.$watch('darkMode', () => {
                 this.updateDarkMode(); this.saveUserData();
                 if (this.currentPage === 'dashboard' || this.currentPage === 'laporan')
-                    this._scheduleChartRender();
+                    this._scheduleChartRender(100);
             });
             this.$watch('currentPage', () => {
                 this._destroyAllCharts();
                 this._stopQrScanner();
                 this.dashboardScannerActive = false;
                 if (this.currentPage === 'dashboard' || this.currentPage === 'laporan')
-                    this._scheduleChartRender();
-                if (this.currentPage === 'dashboard' && this.currentRole === 'penghuni') {
+                    this._scheduleChartRender(150);
+                if (this.currentPage === 'dashboard' && this.currentRole === 'penghuni' && this.currentNik) {
                     this.$nextTick(() => this._renderQR('qr-dashboard-penghuni', this.currentNik));
                 }
             });
 
-            this._scheduleChartRender(600);
+            this._scheduleChartRender(300);
 
             this.$nextTick(() => {
-                if (this.currentPage === 'dashboard' && this.currentRole === 'penghuni') {
+                if (this.currentPage === 'dashboard' && this.currentRole === 'penghuni' && this.currentNik) {
                     this._renderQR('qr-dashboard-penghuni', this.currentNik);
                 }
-                setTimeout(() => {
-                    const loader = document.getElementById('page-loader');
-                    if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.remove(), 800); }
-                }, 2800);
+                const loader = document.getElementById('page-loader');
+                if (loader) {
+                    setTimeout(() => {
+                        loader.style.opacity = '0';
+                        setTimeout(() => { try { loader.remove(); } catch (e) { } }, 400);
+                    }, 350);
+                }
             });
         },
 
         _chartRenderTimer: null,
 
-        _scheduleChartRender(delay = 200) {
+        _scheduleChartRender(delay = 150) {
             if (this._chartRenderTimer) clearTimeout(this._chartRenderTimer);
             this._chartRenderTimer = setTimeout(() => {
                 this._chartRenderTimer = null;
-                this.$nextTick(() => this.renderAllCharts());
+                requestAnimationFrame(() => {
+                    this.renderAllCharts();
+                });
             }, delay);
         },
+
 
         // ══════════════════════════════════════════════
         // RENDER CHART
@@ -1217,12 +1764,88 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        renderBarChart(canvasId, labels, data, color, label = '') {
+            if (!this._isCanvasReady(canvasId)) return;
+            const canvas = document.getElementById(canvasId);
+            this._destroyChart(canvasId);
+            const isDark = this.darkMode;
+            const textColor = isDark ? '#94a3b8' : '#64748b';
+            const gridColor = isDark ? '#1e293b' : '#f1f5f9';
+            try {
+                const chart = new Chart(canvas, {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: label || 'Hadir',
+                            data,
+                            backgroundColor: color + 'CC',
+                            borderColor: color,
+                            borderWidth: 2,
+                            borderRadius: 8,
+                            borderSkipped: false,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: ctx => ` ${ctx.parsed.y} penghuni hadir`
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: { color: gridColor },
+                                ticks: { color: textColor, font: { size: 12, family: "'DM Sans', sans-serif" } }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: gridColor },
+                                ticks: {
+                                    color: textColor,
+                                    font: { size: 12, family: "'DM Sans', sans-serif" },
+                                    stepSize: 1,
+                                    precision: 0
+                                }
+                            }
+                        },
+                        animation: { duration: 600, easing: 'easeInOutQuart' }
+                    }
+                });
+                this.chartInstances[canvasId] = chart;
+            } catch (e) {
+                console.warn(`Bar chart render gagal untuk #${canvasId}:`, e.message);
+                delete this.chartInstances[canvasId];
+            }
+        },
+
         renderAllCharts() {
             if (this.currentPage === 'dashboard') {
-                const sd = this.laporanStatus;
-                this.renderDonutChart('chart-status-penghuni', sd.map(s => s.label), sd.map(s => s.jumlah), sd.map(s => s.warna), String(this.penghuni.length));
-                const hd = this.laporanHunianBarak;
-                this.renderDonutChart('chart-hunian-barak', hd.map(h => h.label), hd.map(h => h.jumlah), hd.map(h => h.warna), this.hunianPersen + '%');
+                // Hanya render chart admin/pembina/pimpinan jika bukan penghuni
+                if (this.currentRole !== 'penghuni') {
+                    const sd = this.laporanStatus;
+                    this.renderDonutChart('chart-status-penghuni', sd.map(s => s.label), sd.map(s => s.jumlah), sd.map(s => s.warna), String(this.penghuni.length));
+                    const hd = this.laporanHunianBarak;
+                    this.renderDonutChart('chart-hunian-barak', hd.map(h => h.label), hd.map(h => h.jumlah), hd.map(h => h.warna), this.hunianPersen + '%');
+
+                    // Grafik Kehadiran 7 Hari Terakhir
+                    const days7Labels = [];
+                    const days7Data = [];
+                    for (let i = 6; i >= 0; i--) {
+                        const d = new Date();
+                        d.setDate(d.getDate() - i);
+                        const key = d.toISOString().slice(0, 10);
+                        const label = d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' });
+                        const count = this.presensi.filter(r => r.tanggal === key).length;
+                        days7Labels.push(label);
+                        days7Data.push(count);
+                    }
+                    this.renderBarChart('chart-kehadiran-mingguan', days7Labels, days7Data, '#3b82f6', 'Hadir');
+                }
                 return;
             }
             if (this.currentPage === 'laporan') {
@@ -1236,6 +1859,8 @@ document.addEventListener('alpine:init', () => {
                 this.renderDonutChart('chart-laporan-inventaris', ['Baik', 'Rusak Ringan', 'Rusak Berat'], [this.totalBaik, this.totalRusakRingan, this.totalRusakBerat], ['#22c55e', '#f97316', '#ef4444'], String(this.totalInventaris));
             }
         },
+
+
 
         // ══════════════════════════════════════════════
         // DARK MODE & NAVIGASI
@@ -1301,11 +1926,26 @@ document.addEventListener('alpine:init', () => {
                     this.penghuni = this.isEditMode
                         ? this.penghuni.map(p => p.nik === data.nik ? data : p)
                         : [data, ...this.penghuni];
+
+                    // Sinkronkan nama ke data akun (users) jika ada akun yang terhubung ke NIK ini
+                    const userLinkedIdx = this.users.findIndex(u => u.nik === data.nik);
+                    if (userLinkedIdx !== -1) {
+                        this.users[userLinkedIdx].nama = data.nama;
+                        this.saveExtraData();
+                    }
+
+                    // Jika yang sedang login adalah penghuni ini, perbarui nama profil seketika
+                    if (this.currentRole === 'penghuni' && this.currentNik === data.nik) {
+                        this.userProfile.name = data.nama;
+                        this.saveUserData();
+                    }
+
                     this.modalOpen = false;
                     if (this.currentPage === 'dashboard' || this.currentPage === 'laporan') this._scheduleChartRender();
                     Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Data tersimpan', timer: 1500, showConfirmButton: false });
                 });
         },
+
 
         _kosongkanKamarDariPenghuni(nik) {
             const newBarak = JSON.parse(JSON.stringify(this.barak));
@@ -1606,27 +2246,106 @@ document.addEventListener('alpine:init', () => {
         // ══════════════════════════════════════════════
         // PROFIL & PENGATURAN
         // ══════════════════════════════════════════════
-        openProfileModal(tab = 'profile') { this.activeTab = tab; this.profileModalOpen = true; },
+        openProfileModal(tab = 'profile') {
+            this.activeTab = tab;
+            // Selalu muat nama dan kontak terbaru sesuai role yang aktif
+            if (this.currentRole === 'penghuni') {
+                const p = this.myPenghuni;
+                if (p) {
+                    this.userProfile.name = p.nama || '';
+                    if (p.no_hp) this.userProfile.phone = p.no_hp;
+                } else {
+                    const u = this._currentUserRecord();
+                    if (u) this.userProfile.name = u.nama || '';
+                }
+            } else {
+                const u = this._currentUserRecord();
+                if (u && !this.userProfile.name) this.userProfile.name = u.nama || '';
+            }
+            this.profileModalOpen = true;
+        },
+
         uploadPhoto(event) {
             const file = event.target.files[0];
             if (!file?.type.startsWith('image/')) return Swal.fire('Error', 'Hanya file gambar yang diperbolehkan', 'error');
             const reader = new FileReader();
-            reader.onload = e => { this.userProfile = { ...this.userProfile, photo: e.target.result }; };
+            reader.onload = e => {
+                this.userProfile = { ...this.userProfile, photo: e.target.result };
+                this.saveUserData();
+            };
             reader.readAsDataURL(file);
         },
-        saveProfile() {
-            if (!this.userProfile.name?.trim() || !this.userProfile.email?.trim()) return Swal.fire('Error', 'Nama dan Email wajib diisi', 'error');
-            this.saving = true;
-            setTimeout(() => { this.saveUserData(); this.saving = false; this.profileModalOpen = false; Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Profil diperbarui', timer: 1500, showConfirmButton: false }); }, 800);
+
+        removePhoto() {
+            this.userProfile = { ...this.userProfile, photo: '' };
+            this.saveUserData();
+            Swal.fire({ icon: 'success', title: 'Foto Profil Dihapus', timer: 1200, showConfirmButton: false });
         },
+
+        saveProfile() {
+            if (!this.userProfile.name?.trim()) return Swal.fire('Error', 'Nama lengkap wajib diisi', 'error');
+            this.saving = true;
+            setTimeout(() => {
+                const newName = this.userProfile.name.trim();
+
+                // 1. Sinkronkan ke master data penghuni jika role penghuni atau akun terhubung NIK
+                const targetNik = this.currentNik || this._currentUserRecord()?.nik;
+                if (targetNik) {
+                    const pIdx = this.penghuni.findIndex(p => p.nik === targetNik);
+                    if (pIdx !== -1) {
+                        this.penghuni[pIdx].nama = newName;
+                        if (this.userProfile.phone) this.penghuni[pIdx].no_hp = this.userProfile.phone;
+                        this.saveToStorage();
+                    }
+                }
+
+                // 2. Sinkronkan ke data akun users
+                const idx = this.users.findIndex(u => String(u.id) === String(this.currentUserId)
+                    || (u.username || '').toLowerCase() === (this.currentUsername || '').toLowerCase()
+                    || (targetNik && u.nik === targetNik));
+                if (idx !== -1) {
+                    this.users[idx].nama = newName;
+                }
+
+                // 3. Sinkronkan ke kartu anggota jika sedang terbuka
+                if (this.kartuPenghuni) {
+                    this.kartuPenghuni.nama = newName;
+                }
+
+                this.saveExtraData();
+                this.saveUserData();
+                this.saving = false;
+                this.profileModalOpen = false;
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Profil dan Kartu Penghuni berhasil diperbarui', timer: 1500, showConfirmButton: false });
+            }, 600);
+        },
+
         saveSettings() {
+
+            const akun = this._currentUserRecord();
             if (this.settings.newPassword || this.settings.oldPassword) {
+                if (!akun) return Swal.fire('Error', 'Data akun tidak ditemukan. Silakan login ulang.', 'error');
+                if (this.settings.oldPassword !== akun.password) return Swal.fire('Error', 'Kata sandi lama tidak sesuai', 'error');
                 if (this.settings.newPassword !== this.settings.confirmPassword) return Swal.fire('Error', 'Konfirmasi kata sandi tidak cocok', 'error');
                 if (this.settings.newPassword.length < 6) return Swal.fire('Error', 'Kata sandi minimal 6 karakter', 'error');
             }
             this.saving = true;
-            setTimeout(() => { this.saveUserData(); this.settings.oldPassword = ''; this.settings.newPassword = ''; this.settings.confirmPassword = ''; this.saving = false; this.profileModalOpen = false; Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Pengaturan disimpan', timer: 1500, showConfirmButton: false }); }, 800);
+            setTimeout(() => {
+                // Simpan kata sandi baru ke data akun sesungguhnya (this.users), bukan
+                // hanya ke pengaturan lokal, supaya login berikutnya memakai sandi baru.
+                if (this.settings.newPassword && akun) {
+                    const idx = this.users.findIndex(u => String(u.id) === String(akun.id));
+                    if (idx !== -1) this.users[idx].password = this.settings.newPassword;
+                    this.saveExtraData();
+                }
+                this.saveUserData();
+                this.settings.oldPassword = ''; this.settings.newPassword = ''; this.settings.confirmPassword = '';
+                this.saving = false;
+                this.profileModalOpen = false;
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Pengaturan disimpan', timer: 1500, showConfirmButton: false });
+            }, 600);
         },
+
 
         // ══════════════════════════════════════════════
         // LOGOUT & RESET
@@ -1637,12 +2356,12 @@ document.addEventListener('alpine:init', () => {
                     if (r.isConfirmed) {
                         this._destroyAllCharts();
                         this._stopQrScanner();
-                        localStorage.removeItem('isLoggedIn');
-                        localStorage.removeItem('loggedInUser');
-                        localStorage.removeItem('loggedInUsername');
-                        localStorage.removeItem('loggedInRole');
-                        localStorage.removeItem('loggedInUserId');
-                        localStorage.removeItem('loggedInNik');
+                        sessionStorage.removeItem('isLoggedIn');
+                        sessionStorage.removeItem('loggedInUser');
+                        sessionStorage.removeItem('loggedInUsername');
+                        sessionStorage.removeItem('loggedInRole');
+                        sessionStorage.removeItem('loggedInUserId');
+                        sessionStorage.removeItem('loggedInNik');
                         window.location.replace('login.html');
                     }
                 });

@@ -54,94 +54,307 @@
                     <div class="demo-box">
                         <p class="demo-title"><i class="fas fa-bolt"></i> Coba Akun Demo</p>
                         <div class="demo-grid">
-                            <button type="button" class="demo-chip" @click="quickLogin('admin')">
+                            <button type="button" class="demo-chip" @click="quickLogin('admin')"
+                                :title="'Login sebagai ' + (getUserByRole('admin')?.nama || 'Admin')">
                                 <span class="demo-chip-icon"><i class="fas fa-user-shield"></i></span>
                                 <span class="demo-chip-text">
                                     <span class="demo-chip-role">Admin</span>
-                                    <span class="demo-chip-user">admin</span>
+                                    <span class="demo-chip-user"
+                                        x-text="getUserByRole('admin')?.username || 'admin'"></span>
                                 </span>
                             </button>
-                            <button type="button" class="demo-chip" @click="quickLogin('pembina')">
+                            <button type="button" class="demo-chip" @click="quickLogin('pembina')"
+                                :title="'Login sebagai ' + (getUserByRole('pembina')?.nama || 'Pembina')">
                                 <span class="demo-chip-icon"><i class="fas fa-chalkboard-user"></i></span>
                                 <span class="demo-chip-text">
                                     <span class="demo-chip-role">Pembina</span>
-                                    <span class="demo-chip-user">pembina</span>
+                                    <span class="demo-chip-user"
+                                        x-text="getUserByRole('pembina')?.username || 'pembina'"></span>
                                 </span>
                             </button>
-                            <button type="button" class="demo-chip" @click="quickLogin('penghuni')">
+                            <button type="button" class="demo-chip" @click="quickLogin('penghuni')"
+                                :title="'Login sebagai ' + (getUserByRole('penghuni')?.nama || 'Penghuni')">
                                 <span class="demo-chip-icon"><i class="fas fa-user"></i></span>
                                 <span class="demo-chip-text">
                                     <span class="demo-chip-role">Penghuni</span>
-                                    <span class="demo-chip-user">penghuni</span>
+                                    <span class="demo-chip-user"
+                                        x-text="getUserByRole('penghuni')?.username || 'penghuni'"></span>
                                 </span>
                             </button>
-                            <button type="button" class="demo-chip" @click="quickLogin('pimpinan')">
+                            <button type="button" class="demo-chip" @click="quickLogin('pimpinan')"
+                                :title="'Login sebagai ' + (getUserByRole('pimpinan')?.nama || 'Pimpinan')">
                                 <span class="demo-chip-icon"><i class="fas fa-building-user"></i></span>
                                 <span class="demo-chip-text">
                                     <span class="demo-chip-role">Pimpinan</span>
-                                    <span class="demo-chip-user">pimpinan</span>
+                                    <span class="demo-chip-user"
+                                        x-text="getUserByRole('pimpinan')?.username || 'pimpinan'"></span>
                                 </span>
                             </button>
                         </div>
                     </div>
+
                 </div>
 
                 <div class="form-panel">
-                    <div class="f-heading fu">Selamat Datang 👋</div>
-                    <div class="f-sub fu d1">Masuk ke panel administrasi asrama</div>
 
-                    <div x-show="errorMessage" x-transition class="err-box">
-                        <i class="fas fa-circle-exclamation"></i>
-                        <span x-text="errorMessage"></span>
+                    <!-- ── Tab switcher ── -->
+                    <div class="tab-bar fu">
+                        <button class="tab-btn" :class="activeTab==='login' && 'active'" @click="setTab('login')">
+                            <i class="fas fa-right-to-bracket"></i> Masuk
+                        </button>
+                        <button class="tab-btn" :class="activeTab==='register' && 'active'" @click="setTab('register')">
+                            <i class="fas fa-user-plus"></i> Daftar
+                        </button>
                     </div>
 
-                    <div class="f-field fu d2">
-                        <label class="f-label">Username</label>
-                        <div class="f-input-wrap">
-                            <input type="text" x-model="form.username" required autofocus
-                                placeholder="Masukkan username">
-                            <span class="f-icon"><i class="fas fa-user"></i></span>
+                    <!-- ═══════════════ TAB: LOGIN ═══════════════ -->
+                    <div x-show="activeTab==='login'" x-transition>
+                        <div class="f-heading fu">Selamat Datang 👋</div>
+                        <div class="f-sub fu d1">Masuk ke panel administrasi asrama</div>
+
+                        <div x-show="errorMessage" x-transition class="err-box">
+                            <i class="fas fa-circle-exclamation"></i>
+                            <span x-text="errorMessage"></span>
                         </div>
-                    </div>
 
-                    <div class="f-field fu d3">
-                        <label class="f-label">Kata Sandi</label>
-                        <div class="f-input-wrap">
-                            <input :type="showPassword ? 'text' : 'password'" x-model="form.password" required
-                                placeholder="Masukkan kata sandi">
-                            <button type="button" class="f-icon btn" @click="showPassword = !showPassword">
-                                <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                        <div class="f-field fu d2">
+                            <label class="f-label">Username</label>
+                            <div class="f-input-wrap">
+                                <input type="text" x-model="form.username" required autofocus
+                                    placeholder="Masukkan username" @keydown.enter="handleLogin()">
+                                <span class="f-icon"><i class="fas fa-user"></i></span>
+                            </div>
+                        </div>
+
+                        <div class="f-field fu d3">
+                            <label class="f-label">Kata Sandi</label>
+                            <div class="f-input-wrap">
+                                <input :type="showPassword ? 'text' : 'password'" x-model="form.password" required
+                                    placeholder="Masukkan kata sandi" @keydown.enter="handleLogin()">
+                                <button type="button" class="f-icon btn" @click="showPassword = !showPassword">
+                                    <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="rem-row fu d4">
+                            <input type="checkbox" x-model="form.remember" id="remember">
+                            <label for="remember">Ingat saya</label>
+                            <span style="flex:1"></span>
+                            <button type="button" class="link-btn" @click="setTab('forgot')">
+                                <i class="fas fa-key" style="font-size:.7rem;"></i> Lupa sandi?
+                            </button>
+                        </div>
+
+                        <button class="btn-submit fu d5" @click="handleLogin()" :disabled="loading">
+                            <template x-if="!loading">
+                                <span style="display:flex;align-items:center;gap:8px;">
+                                    <i class="fas fa-right-to-bracket"></i>
+                                    Masuk ke Dashboard
+                                </span>
+                            </template>
+                            <template x-if="loading">
+                                <span style="display:flex;align-items:center;gap:10px;">
+                                    <span class="spin-ring"></span>
+                                    Memproses...
+                                </span>
+                            </template>
+                        </button>
+
+                        <div class="f-footer fu d6">
+                            <button type="button" class="link-btn" @click="openHubungiAdmin()">
+                                <i class="fas fa-headset"></i> Hubungi Admin
+                            </button>
+                            <span>&middot;</span>
+                            <button type="button" class="link-btn" @click="setTab('register')">
+                                Belum punya akun? <strong>Daftar</strong>
                             </button>
                         </div>
                     </div>
 
-                    <div class="rem-row fu d4">
-                        <input type="checkbox" x-model="form.remember" id="remember">
-                        <label for="remember">Ingat saya</label>
+                    <!-- ═══════════════ TAB: REGISTER ═══════════════ -->
+                    <div x-show="activeTab==='register'" x-transition>
+                        <div class="f-heading fu">Daftar Akun Baru</div>
+                        <div class="f-sub fu d1">Lengkapi data untuk mendaftar sebagai penghuni</div>
+
+                        <div x-show="regMessage.text" x-transition
+                            :class="regMessage.type==='success' ? 'suc-box' : 'err-box'">
+                            <i class="fas"
+                                :class="regMessage.type==='success' ? 'fa-circle-check' : 'fa-circle-exclamation'"></i>
+                            <span x-text="regMessage.text"></span>
+                        </div>
+
+                        <div class="f-field fu d1">
+                            <label class="f-label">Nama Lengkap</label>
+                            <div class="f-input-wrap">
+                                <input type="text" x-model="regForm.nama" placeholder="Masukkan nama lengkap">
+                                <span class="f-icon"><i class="fas fa-id-card"></i></span>
+                            </div>
+                        </div>
+                        <div class="f-field fu d2">
+                            <label class="f-label">NIK (Nomor Induk Penghuni)</label>
+                            <div class="f-input-wrap">
+                                <input type="text" x-model="regForm.nik" placeholder="NIK dari admin asrama"
+                                    maxlength="20">
+                                <span class="f-icon"><i class="fas fa-fingerprint"></i></span>
+                            </div>
+                        </div>
+                        <div class="f-field fu d3">
+                            <label class="f-label">Username</label>
+                            <div class="f-input-wrap">
+                                <input type="text" x-model="regForm.username"
+                                    placeholder="Buat username unik (min. 4 karakter)">
+                                <span class="f-icon"><i class="fas fa-at"></i></span>
+                            </div>
+                        </div>
+                        <div class="f-field fu d4">
+                            <label class="f-label">Kata Sandi</label>
+                            <div class="f-input-wrap">
+                                <input :type="showRegPassword ? 'text' : 'password'" x-model="regForm.password"
+                                    placeholder="Min. 6 karakter">
+                                <button type="button" class="f-icon btn" @click="showRegPassword = !showRegPassword">
+                                    <i :class="showRegPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="f-field fu d5">
+                            <label class="f-label">Konfirmasi Kata Sandi</label>
+                            <div class="f-input-wrap">
+                                <input :type="showRegPassword ? 'text' : 'password'" x-model="regForm.konfirmasi"
+                                    placeholder="Ulangi kata sandi">
+                                <span class="f-icon"><i class="fas fa-lock"></i></span>
+                            </div>
+                        </div>
+
+                        <div class="info-hint fu d5">
+                            <i class="fas fa-circle-info"></i>
+                            NIK harus terdaftar di sistem asrama. Hubungi admin jika belum memiliki NIK.
+                        </div>
+
+                        <button class="btn-submit fu d6" @click="handleRegister()" :disabled="regLoading">
+                            <template x-if="!regLoading">
+                                <span style="display:flex;align-items:center;gap:8px;">
+                                    <i class="fas fa-user-plus"></i> Daftar Sekarang
+                                </span>
+                            </template>
+                            <template x-if="regLoading">
+                                <span style="display:flex;align-items:center;gap:10px;">
+                                    <span class="spin-ring"></span> Mendaftarkan...
+                                </span>
+                            </template>
+                        </button>
+
+                        <div class="f-footer fu">
+                            Sudah punya akun?
+                            <button type="button" class="link-btn"
+                                @click="setTab('login')"><strong>Masuk</strong></button>
+                            <span>&middot;</span>
+                            <button type="button" class="link-btn" @click="openHubungiAdmin()">
+                                <i class="fas fa-headset"></i> Hubungi Admin
+                            </button>
+                        </div>
                     </div>
 
-                    <button class="btn-submit fu d5" @click="handleLogin" :disabled="loading">
-                        <template x-if="!loading">
-                            <span style="display:flex;align-items:center;gap:8px;">
-                                <i class="fas fa-right-to-bracket"></i>
-                                Masuk ke Dashboard
-                            </span>
-                        </template>
-                        <template x-if="loading">
-                            <span style="display:flex;align-items:center;gap:10px;">
-                                <span class="spin-ring"></span>
-                                Memproses...
-                            </span>
-                        </template>
-                    </button>
+                    <!-- ═══════════════ TAB: LUPA SANDI ═══════════════ -->
+                    <div x-show="activeTab==='forgot'" x-transition>
+                        <div class="f-heading fu">Lupa Kata Sandi? 🔑</div>
+                        <div class="f-sub fu d1">Verifikasi identitas untuk mengatur ulang kata sandi</div>
 
-                    <div class="f-footer fu d6">
-                        <a href="#">Lupa kata sandi?</a>
-                        <span>&middot;</span>
-                        <a href="#">Hubungi Admin</a>
+                        <div x-show="forgotMessage.text" x-transition
+                            :class="forgotMessage.type==='success' ? 'suc-box' : 'err-box'">
+                            <i class="fas"
+                                :class="forgotMessage.type==='success' ? 'fa-circle-check' : 'fa-circle-exclamation'"></i>
+                            <span x-text="forgotMessage.text"></span>
+                        </div>
+
+                        <!-- Step 1: Verifikasi -->
+                        <div x-show="forgotStep===1">
+                            <div class="f-field fu d2">
+                                <label class="f-label">Username</label>
+                                <div class="f-input-wrap">
+                                    <input type="text" x-model="forgotForm.username" placeholder="Username akun Anda">
+                                    <span class="f-icon"><i class="fas fa-user"></i></span>
+                                </div>
+                            </div>
+                            <div class="f-field fu d3">
+                                <label class="f-label">NIK Terdaftar</label>
+                                <div class="f-input-wrap">
+                                    <input type="text" x-model="forgotForm.nik"
+                                        placeholder="NIK yang terdaftar di sistem">
+                                    <span class="f-icon"><i class="fas fa-fingerprint"></i></span>
+                                </div>
+                            </div>
+                            <div class="info-hint fu d3">
+                                <i class="fas fa-circle-info"></i>
+                                Khusus akun Penghuni. Akun staf (Admin/Pembina/Pimpinan) harus reset melalui
+                                <strong>Hubungi Admin</strong>.
+                            </div>
+                            <button class="btn-submit fu d4" @click="handleForgotVerify()" :disabled="forgotLoading">
+                                <template x-if="!forgotLoading">
+                                    <span style="display:flex;align-items:center;gap:8px;">
+                                        <i class="fas fa-magnifying-glass"></i> Verifikasi Identitas
+                                    </span>
+                                </template>
+                                <template x-if="forgotLoading">
+                                    <span style="display:flex;align-items:center;gap:10px;">
+                                        <span class="spin-ring"></span> Memverifikasi...
+                                    </span>
+                                </template>
+                            </button>
+                        </div>
+
+                        <!-- Step 2: Reset password baru -->
+                        <div x-show="forgotStep===2">
+                            <div class="suc-box">
+                                <i class="fas fa-circle-check"></i>
+                                <span>Identitas terverifikasi! Buat kata sandi baru Anda.</span>
+                            </div>
+                            <div class="f-field fu d2">
+                                <label class="f-label">Kata Sandi Baru</label>
+                                <div class="f-input-wrap">
+                                    <input :type="showNewPassword ? 'text' : 'password'"
+                                        x-model="forgotForm.newPassword" placeholder="Min. 6 karakter">
+                                    <button type="button" class="f-icon btn"
+                                        @click="showNewPassword = !showNewPassword">
+                                        <i :class="showNewPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="f-field fu d3">
+                                <label class="f-label">Konfirmasi Kata Sandi Baru</label>
+                                <div class="f-input-wrap">
+                                    <input :type="showNewPassword ? 'text' : 'password'" x-model="forgotForm.konfirmasi"
+                                        placeholder="Ulangi kata sandi baru">
+                                    <span class="f-icon"><i class="fas fa-lock"></i></span>
+                                </div>
+                            </div>
+                            <button class="btn-submit fu d4" @click="handleResetPassword()" :disabled="forgotLoading">
+                                <template x-if="!forgotLoading">
+                                    <span style="display:flex;align-items:center;gap:8px;">
+                                        <i class="fas fa-floppy-disk"></i> Simpan Kata Sandi Baru
+                                    </span>
+                                </template>
+                                <template x-if="forgotLoading">
+                                    <span style="display:flex;align-items:center;gap:10px;">
+                                        <span class="spin-ring"></span> Menyimpan...
+                                    </span>
+                                </template>
+                            </button>
+                        </div>
+
+                        <div class="f-footer fu" style="margin-top:16px;">
+                            <button type="button" class="link-btn" @click="setTab('login')">
+                                <i class="fas fa-arrow-left"></i> Kembali ke Login
+                            </button>
+                            <span>&middot;</span>
+                            <button type="button" class="link-btn" @click="openHubungiAdmin()">
+                                <i class="fas fa-headset"></i> Hubungi Admin
+                            </button>
+                        </div>
                     </div>
-                </div>
-            </div>
+
+                </div><!-- /form-panel -->
+            </div><!-- /card -->
         </main>
     </div>
 
@@ -151,18 +364,33 @@
                 darkMode: localStorage.theme === 'dark' ||
                     (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches),
                 showPassword: false,
+                showRegPassword: false,
+                showNewPassword: false,
                 loading: false,
+                regLoading: false,
+                forgotLoading: false,
                 errorMessage: '',
+
+                // Navigasi tab: 'login' | 'register' | 'forgot'
+                activeTab: 'login',
+
+                // Form login
                 form: {
                     username: localStorage.getItem('rememberedUser') || '',
                     password: '',
                     remember: !!localStorage.getItem('rememberedUser'),
                 },
 
-                // Akun demo bawaan — harus identik dengan _seedDefaultUsers() di script.js
-                // Sumber kebenaran sesungguhnya adalah localStorage 'simasra_users' (dikelola
-                // lewat menu Manajemen Pengguna). Daftar di bawah ini hanya fallback untuk
-                // kunjungan pertama sebelum index.html pernah dijalankan.
+                // Form register
+                regForm: { nama: '', nik: '', username: '', password: '', konfirmasi: '' },
+                regMessage: { type: '', text: '' },
+
+                // Form lupa sandi
+                forgotForm: { username: '', nik: '', newPassword: '', konfirmasi: '' },
+                forgotMessage: { type: '', text: '' },
+                forgotStep: 1,
+
+                // Akun demo bawaan — fallback jika localStorage belum ada
                 defaultUsers: [
                     { id: 1, username: 'admin', password: 'admin123', role: 'admin', nama: 'Admin SIMASRA', nik: null, active: true },
                     { id: 2, username: 'pembina', password: 'pembina123', role: 'pembina', nama: 'Yulianus Kegou, S.Pd', nik: null, active: true },
@@ -170,20 +398,25 @@
                     { id: 4, username: 'penghuni', password: 'penghuni123', role: 'penghuni', nama: 'Yohanis Duwiri', nik: '9102017501010001', active: true },
                 ],
 
-                init() {
-                    this.applyDark();
-                },
+                init() { this.applyDark(); },
 
                 applyDark() {
                     document.documentElement.classList.toggle('dark', this.darkMode);
                     localStorage.theme = this.darkMode ? 'dark' : 'light';
                 },
 
-                toggleDarkMode() {
-                    this.darkMode = !this.darkMode;
-                    this.applyDark();
+                toggleDarkMode() { this.darkMode = !this.darkMode; this.applyDark(); },
+
+                setTab(tab) {
+                    this.activeTab = tab;
+                    this.errorMessage = '';
+                    this.regMessage = { type: '', text: '' };
+                    this.forgotMessage = { type: '', text: '' };
+                    this.forgotStep = 1;
+                    this.forgotForm = { username: '', nik: '', newPassword: '', konfirmasi: '' };
                 },
 
+                // ── User Store ──────────────────────────────────────────────────
                 getUsers() {
                     try {
                         const raw = localStorage.getItem('simasra_users');
@@ -192,24 +425,42 @@
                     } catch { return this.defaultUsers; }
                 },
 
+                saveUsers(users) {
+                    localStorage.setItem('simasra_users', JSON.stringify(users));
+                },
+
+                getUserByRole(role) {
+                    return this.getUsers().find(x => x.role === role && x.active !== false)
+                        || this.getUsers().find(x => x.role === role)
+                        || null;
+                },
+
+                getPenghuni() {
+                    try {
+                        const raw = localStorage.getItem('simasra_penghuni');
+                        return raw ? JSON.parse(raw) : [];
+                    } catch { return []; }
+                },
+
+                // ── Quick Demo Login ────────────────────────────────────────────
                 quickLogin(role) {
-                    const u = this.getUsers().find(x => x.role === role);
-                    if (!u) return;
+                    const u = this.getUserByRole(role);
+                    if (!u) { this.errorMessage = `Akun demo untuk role ${role} tidak ditemukan.`; return; }
+                    this.activeTab = 'login';
                     this.form.username = u.username;
                     this.form.password = u.password;
                     this.handleLogin();
                 },
 
+                // ── Login ───────────────────────────────────────────────────────
                 async handleLogin() {
                     this.errorMessage = '';
-
                     if (!this.form.username.trim() || !this.form.password.trim()) {
                         this.errorMessage = 'Username dan kata sandi wajib diisi.';
                         return;
                     }
-
                     this.loading = true;
-                    await new Promise(r => setTimeout(r, 700));
+                    await new Promise(r => setTimeout(r, 500));
 
                     const uname = this.form.username.trim().toLowerCase();
                     const pass = this.form.password.trim();
@@ -226,12 +477,12 @@
                         return;
                     }
 
-                    localStorage.setItem('isLoggedIn', 'true');
-                    localStorage.setItem('loggedInUser', user.username); // kompatibilitas versi lama
-                    localStorage.setItem('loggedInUsername', user.username);
-                    localStorage.setItem('loggedInRole', user.role);
-                    localStorage.setItem('loggedInUserId', String(user.id));
-                    localStorage.setItem('loggedInNik', user.nik || '');
+                    sessionStorage.setItem('isLoggedIn', 'true');
+                    sessionStorage.setItem('loggedInUser', user.username);
+                    sessionStorage.setItem('loggedInUsername', user.username);
+                    sessionStorage.setItem('loggedInRole', user.role);
+                    sessionStorage.setItem('loggedInUserId', String(user.id));
+                    sessionStorage.setItem('loggedInNik', user.nik || '');
 
                     if (this.form.remember) {
                         localStorage.setItem('rememberedUser', user.username);
@@ -240,18 +491,219 @@
                     }
 
                     const roleLabel = { admin: 'Administrator', pembina: 'Pembina Asrama', penghuni: 'Penghuni', pimpinan: 'Pimpinan' }[user.role] || user.role;
-
                     await Swal.fire({
                         title: 'Login Berhasil!',
                         text: `Selamat datang, ${user.nama} (${roleLabel})`,
                         icon: 'success',
-                        timer: 1500,
+                        timer: 1400,
                         showConfirmButton: false,
                         allowOutsideClick: false
                     });
-
                     window.location.replace('index.html');
                     this.loading = false;
+                },
+
+                // ── Register ────────────────────────────────────────────────────
+                async handleRegister() {
+                    this.regMessage = { type: '', text: '' };
+                    const { nama, nik, username, password, konfirmasi } = this.regForm;
+
+                    if (!nama.trim() || !nik.trim() || !username.trim() || !password || !konfirmasi) {
+                        this.regMessage = { type: 'error', text: 'Semua field wajib diisi.' }; return;
+                    }
+                    if (username.trim().length < 4) {
+                        this.regMessage = { type: 'error', text: 'Username minimal 4 karakter.' }; return;
+                    }
+                    if (password.length < 6) {
+                        this.regMessage = { type: 'error', text: 'Kata sandi minimal 6 karakter.' }; return;
+                    }
+                    if (password !== konfirmasi) {
+                        this.regMessage = { type: 'error', text: 'Konfirmasi kata sandi tidak cocok.' }; return;
+                    }
+
+                    const users = this.getUsers();
+
+                    if (users.some(u => u.username.toLowerCase() === username.trim().toLowerCase())) {
+                        this.regMessage = { type: 'error', text: 'Username sudah digunakan. Pilih username lain.' }; return;
+                    }
+
+                    // Verifikasi NIK harus ada di data penghuni
+                    const penghuniList = this.getPenghuni();
+                    const dataP = penghuniList.find(p => p.nik === nik.trim());
+                    if (!dataP) {
+                        this.regMessage = { type: 'error', text: 'NIK tidak ditemukan di database asrama. Pastikan NIK sesuai atau hubungi admin.' };
+                        return;
+                    }
+
+                    // Cek NIK sudah terhubung akun lain
+                    if (users.some(u => u.nik === nik.trim())) {
+                        this.regMessage = { type: 'error', text: 'NIK ini sudah terhubung ke akun lain. Hubungi admin.' };
+                        return;
+                    }
+
+                    this.regLoading = true;
+                    await new Promise(r => setTimeout(r, 600));
+
+                    const newUser = {
+                        id: Date.now(),
+                        username: username.trim().toLowerCase(),
+                        password,
+                        role: 'penghuni',
+                        nama: dataP.nama || nama.trim(),
+                        nik: nik.trim(),
+                        active: true
+                    };
+                    users.push(newUser);
+                    this.saveUsers(users);
+                    this.regLoading = false;
+
+                    this.regMessage = { type: 'success', text: `Akun "${newUser.username}" berhasil dibuat! Silakan login.` };
+                    this.regForm = { nama: '', nik: '', username: '', password: '', konfirmasi: '' };
+
+                    await Swal.fire({
+                        title: 'Pendaftaran Berhasil! 🎉',
+                        html: `Akun <strong>${newUser.username}</strong> berhasil didaftarkan sebagai Penghuni Asrama.<br><br>Silakan masuk dengan username dan kata sandi Anda.`,
+                        icon: 'success',
+                        confirmButtonText: 'Masuk Sekarang',
+                        confirmButtonColor: '#2563eb'
+                    });
+
+                    this.form.username = newUser.username;
+                    this.form.password = '';
+                    this.setTab('login');
+                },
+
+                // ── Lupa Sandi — Step 1: Verifikasi ─────────────────────────────
+                async handleForgotVerify() {
+                    this.forgotMessage = { type: '', text: '' };
+                    const { username, nik } = this.forgotForm;
+
+                    if (!username.trim()) {
+                        this.forgotMessage = { type: 'error', text: 'Username wajib diisi.' }; return;
+                    }
+
+                    this.forgotLoading = true;
+                    await new Promise(r => setTimeout(r, 500));
+
+                    const users = this.getUsers();
+                    const user = users.find(u => u.username.toLowerCase() === username.trim().toLowerCase());
+
+                    if (!user) {
+                        this.forgotMessage = { type: 'error', text: 'Username tidak ditemukan. Periksa kembali.' };
+                        this.forgotLoading = false; return;
+                    }
+
+                    // Akun staf → arahkan ke Hubungi Admin
+                    if (user.role !== 'penghuni') {
+                        this.forgotLoading = false;
+                        await Swal.fire({
+                            title: 'Reset Sandi Akun Staf',
+                            html: `Untuk keamanan, reset kata sandi akun <strong>${user.role}</strong> harus dilakukan oleh Admin SIMASRA secara langsung.`,
+                            icon: 'info',
+                            confirmButtonText: 'Hubungi Admin',
+                            showCancelButton: true,
+                            cancelButtonText: 'Tutup',
+                            confirmButtonColor: '#2563eb'
+                        }).then(r => { if (r.isConfirmed) this.openHubungiAdmin(); });
+                        return;
+                    }
+
+                    // Akun penghuni: verifikasi NIK
+                    if (!nik.trim()) {
+                        this.forgotMessage = { type: 'error', text: 'NIK wajib diisi untuk akun Penghuni.' };
+                        this.forgotLoading = false; return;
+                    }
+                    if (user.nik !== nik.trim()) {
+                        this.forgotMessage = { type: 'error', text: 'NIK tidak cocok dengan data akun ini.' };
+                        this.forgotLoading = false; return;
+                    }
+
+                    this.forgotLoading = false;
+                    this.forgotStep = 2;
+                },
+
+                // ── Lupa Sandi — Step 2: Simpan kata sandi baru ──────────────────
+                async handleResetPassword() {
+                    this.forgotMessage = { type: '', text: '' };
+                    const { username, newPassword, konfirmasi } = this.forgotForm;
+
+                    if (!newPassword || newPassword.length < 6) {
+                        this.forgotMessage = { type: 'error', text: 'Kata sandi baru minimal 6 karakter.' }; return;
+                    }
+                    if (newPassword !== konfirmasi) {
+                        this.forgotMessage = { type: 'error', text: 'Konfirmasi kata sandi tidak cocok.' }; return;
+                    }
+
+                    this.forgotLoading = true;
+                    await new Promise(r => setTimeout(r, 500));
+
+                    const users = this.getUsers();
+                    const idx = users.findIndex(u => u.username.toLowerCase() === username.trim().toLowerCase());
+                    if (idx === -1) {
+                        this.forgotMessage = { type: 'error', text: 'Terjadi kesalahan. Silakan mulai ulang.' };
+                        this.forgotLoading = false; return;
+                    }
+
+                    users[idx].password = newPassword;
+                    this.saveUsers(users);
+                    this.forgotLoading = false;
+
+                    await Swal.fire({
+                        title: 'Kata Sandi Berhasil Diubah! ✅',
+                        text: 'Kata sandi baru telah tersimpan. Silakan masuk dengan kata sandi baru Anda.',
+                        icon: 'success',
+                        confirmButtonText: 'Masuk Sekarang',
+                        confirmButtonColor: '#2563eb'
+                    });
+
+                    this.form.username = username.trim().toLowerCase();
+                    this.form.password = '';
+                    this.setTab('login');
+                },
+
+                // ── Hubungi Admin ─────────────────────────────────────────────────
+                openHubungiAdmin() {
+                    Swal.fire({
+                        title: '<i class="fas fa-headset" style="color:#2563eb;margin-right:6px;"></i>Hubungi Admin SIMASRA',
+                        html: `
+                            <div style="text-align:left;font-size:0.87rem;line-height:1.7;color:#374151;">
+                                <p style="margin-bottom:12px;">Hubungi Admin Asrama Kabupaten Deiyai untuk bantuan akun, registrasi, atau kendala sistem:</p>
+                                <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:12px 16px;margin-bottom:10px;">
+                                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:7px;">
+                                        <i class="fas fa-building-user" style="color:#2563eb;width:18px;"></i>
+                                        <span><strong>Asrama Kabupaten Deiyai</strong></span>
+                                    </div>
+                                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:7px;">
+                                        <i class="fas fa-map-marker-alt" style="color:#2563eb;width:18px;"></i>
+                                        <span>Kota Studi Jayapura, Papua</span>
+                                    </div>
+                                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:7px;">
+                                        <i class="fas fa-phone" style="color:#22c55e;width:18px;"></i>
+                                        <a href="tel:+6282199999999" style="color:#2563eb;font-weight:600;">+62 821-9999-9999</a>
+                                    </div>
+                                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:7px;">
+                                        <i class="fab fa-whatsapp" style="color:#22c55e;width:18px;"></i>
+                                        <a href="https://wa.me/6282199999999?text=Halo%20Admin%20SIMASRA%2C%20saya%20membutuhkan%20bantuan%20terkait%20akun." target="_blank" style="color:#2563eb;font-weight:600;">WhatsApp Admin</a>
+                                    </div>
+                                    <div style="display:flex;align-items:center;gap:10px;">
+                                        <i class="fas fa-envelope" style="color:#2563eb;width:18px;"></i>
+                                        <a href="mailto:admin.simasra@deiyai.go.id" style="color:#2563eb;">admin.simasra@deiyai.go.id</a>
+                                    </div>
+                                </div>
+                                <p style="font-size:0.77rem;color:#6b7280;">⏰ Jam layanan: Senin–Jumat, 08.00–16.00 WIT</p>
+                            </div>
+                        `,
+                        showConfirmButton: true,
+                        confirmButtonText: '<i class="fab fa-whatsapp"></i> Chat via WhatsApp',
+                        confirmButtonColor: '#22c55e',
+                        showCancelButton: true,
+                        cancelButtonText: 'Tutup',
+                        width: '480px'
+                    }).then(r => {
+                        if (r.isConfirmed) {
+                            window.open('https://wa.me/6282199999999?text=Halo%20Admin%20SIMASRA%2C%20saya%20membutuhkan%20bantuan%20terkait%20akun%20SIMASRA.', '_blank');
+                        }
+                    });
                 }
             }));
         });

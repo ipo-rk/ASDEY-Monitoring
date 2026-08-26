@@ -720,3 +720,121 @@ html.dark .rem-row label {
     overflow: auto;
   }
 }
+
+/* ── Tab Bar ── */
+.tab-bar {
+  display: flex;
+  background: #f1f5f9;
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 24px;
+  gap: 4px;
+}
+html.dark .tab-bar {
+  background: #1e293b;
+}
+.tab-btn {
+  flex: 1;
+  padding: 9px 12px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition:
+    background 0.18s,
+    color 0.18s,
+    box-shadow 0.18s;
+}
+.tab-btn:hover {
+  background: rgba(37, 99, 235, 0.07);
+  color: #2563eb;
+}
+.tab-btn.active {
+  background: #fff;
+  color: #2563eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+html.dark .tab-btn.active {
+  background: #0f172a;
+  color: #60a5fa;
+}
+html.dark .tab-btn {
+  color: #94a3b8;
+}
+
+/* ── Success Box ── */
+.suc-box {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+  border-radius: 9px;
+  padding: 10px 14px;
+  font-size: 0.79rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+html.dark .suc-box {
+  background: rgba(21, 128, 61, 0.12);
+  border-color: rgba(134, 239, 172, 0.25);
+  color: #86efac;
+}
+
+/* ── Info Hint ── */
+.info-hint {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  border-radius: 9px;
+  padding: 9px 13px;
+  font-size: 0.76rem;
+  line-height: 1.55;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.info-hint i {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+html.dark .info-hint {
+  background: rgba(37, 99, 235, 0.1);
+  border-color: rgba(96, 165, 250, 0.2);
+  color: #93c5fd;
+}
+
+/* ── Link Button ── */
+.link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.77rem;
+  color: #2563eb;
+  cursor: pointer;
+  font-weight: 500;
+  transition: color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.link-btn:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+html.dark .link-btn {
+  color: #60a5fa;
+}
+html.dark .link-btn:hover {
+  color: #93c5fd;
+}
