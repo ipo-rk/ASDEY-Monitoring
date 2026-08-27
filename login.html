@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login — SIMASRA Asrama Deiyai Jayapura</title>
+    <title>Masuk — SIMASRA | Asrama Kabupaten Deiyai, Jayapura</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -27,10 +27,16 @@
                     <div class="topbar-sub">Kab. Deiyai &middot; Kota Studi Jayapura</div>
                 </div>
             </div>
-            <button class="toggle-btn" @click="toggleDarkMode()" :title="darkMode ? 'Mode Terang' : 'Mode Gelap'">
-                <i x-show="!darkMode" class="fas fa-moon"></i>
-                <i x-show="darkMode" class="fas fa-sun" style="color:#fbbf24"></i>
-            </button>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <a href="landing.html" class="toggle-btn"
+                    style="width:auto;padding:0 16px;border-radius:9999px;text-decoration:none;font-size:0.8rem;font-weight:600;gap:8px;">
+                    <i class="fas fa-arrow-left"></i> Beranda
+                </a>
+                <button class="toggle-btn" @click="toggleDarkMode()" :title="darkMode ? 'Mode Terang' : 'Mode Gelap'">
+                    <i x-show="!darkMode" class="fas fa-moon"></i>
+                    <i x-show="darkMode" class="fas fa-sun" style="color:#fbbf24"></i>
+                </button>
+            </div>
         </header>
 
         <main class="main-area">
@@ -108,7 +114,7 @@
                     </div>
 
                     <!-- ═══════════════ TAB: LOGIN ═══════════════ -->
-                    <div x-show="activeTab==='login'" x-transition>
+                    <div x-show="activeTab==='login'" x-transition x-cloak>
                         <div class="f-heading fu">Selamat Datang 👋</div>
                         <div class="f-sub fu d1">Masuk ke panel administrasi asrama</div>
 
@@ -173,7 +179,7 @@
                     </div>
 
                     <!-- ═══════════════ TAB: REGISTER ═══════════════ -->
-                    <div x-show="activeTab==='register'" x-transition>
+                    <div x-show="activeTab==='register'" x-transition x-cloak>
                         <div class="f-heading fu">Daftar Akun Baru</div>
                         <div class="f-sub fu d1">Lengkapi data untuk mendaftar sebagai penghuni</div>
 
@@ -256,7 +262,7 @@
                     </div>
 
                     <!-- ═══════════════ TAB: LUPA SANDI ═══════════════ -->
-                    <div x-show="activeTab==='forgot'" x-transition>
+                    <div x-show="activeTab==='forgot'" x-transition x-cloak>
                         <div class="f-heading fu">Lupa Kata Sandi? 🔑</div>
                         <div class="f-sub fu d1">Verifikasi identitas untuk mengatur ulang kata sandi</div>
 
@@ -398,7 +404,30 @@
                     { id: 4, username: 'penghuni', password: 'penghuni123', role: 'penghuni', nama: 'Yohanis Duwiri', nik: '9102017501010001', active: true },
                 ],
 
-                init() { this.applyDark(); },
+                init() {
+                    // Integrasi dua arah dengan index.html: jika sesi login masih aktif
+                    // (mis. pengguna membuka ulang login.html lewat riwayat/bookmark),
+                    // langsung alihkan ke dashboard tanpa menampilkan form login lagi.
+                    if (sessionStorage.getItem('isLoggedIn') === 'true') {
+                        window.location.replace('index.html');
+                        return;
+                    }
+                    // Integrasi dengan landing.html: tombol "Daftar Sekarang" di landing
+                    // mengarah ke login.html?tab=register agar langsung membuka tab Daftar.
+                    const params = new URLSearchParams(window.location.search);
+                    const tabParam = params.get('tab');
+                    if (tabParam === 'register' || tabParam === 'forgot') {
+                        this.activeTab = tabParam;
+                    }
+                    this.applyDark();
+
+                    // Integrasi dengan kartu "Coba Akun Demo" di landing.html:
+                    // ?demo=admin|pembina|penghuni|pimpinan langsung menjalankan quick login.
+                    const demoParam = params.get('demo');
+                    if (['admin', 'pembina', 'penghuni', 'pimpinan'].includes(demoParam)) {
+                        this.$nextTick(() => this.quickLogin(demoParam));
+                    }
+                },
 
                 applyDark() {
                     document.documentElement.classList.toggle('dark', this.darkMode);
@@ -440,6 +469,27 @@
                         const raw = localStorage.getItem('simasra_penghuni');
                         return raw ? JSON.parse(raw) : [];
                     } catch { return []; }
+                },
+
+                // ── Notifikasi lintas halaman ────────────────────────────────────
+                // Menulis langsung ke kunci 'simasra_notifikasi' (skema identik dengan
+                // _tambahNotifikasi() di script.js) sehingga dashboard admin yang
+                // sedang terbuka di tab/jendela index.html lain menerima notifikasi
+                // ini secara real-time lewat event 'storage'.
+                _tambahNotifikasiUntukAdmin({ tipe, judul, pesan }) {
+                    try {
+                        const raw = localStorage.getItem('simasra_notifikasi');
+                        const list = raw ? JSON.parse(raw) : [];
+                        list.unshift({
+                            id: Date.now() + Math.random(),
+                            tipe, judul, pesan,
+                            waktu: new Date().toISOString(),
+                            dibaca: false,
+                            untukRole: ['admin'],
+                            untukNik: null
+                        });
+                        localStorage.setItem('simasra_notifikasi', JSON.stringify(list.slice(0, 100)));
+                    } catch { /* abaikan jika localStorage tidak tersedia */ }
                 },
 
                 // ── Quick Demo Login ────────────────────────────────────────────
@@ -557,6 +607,13 @@
                     this.saveUsers(users);
                     this.regLoading = false;
 
+                    // Beri tahu admin secara real-time (lihat _setupLiveSync di script.js)
+                    this._tambahNotifikasiUntukAdmin({
+                        tipe: 'akun',
+                        judul: 'Pendaftaran Akun Baru',
+                        pesan: `${newUser.nama} (@${newUser.username}) mendaftar sebagai Penghuni.`
+                    });
+
                     this.regMessage = { type: 'success', text: `Akun "${newUser.username}" berhasil dibuat! Silakan login.` };
                     this.regForm = { nama: '', nik: '', username: '', password: '', konfirmasi: '' };
 
@@ -647,6 +704,13 @@
                     users[idx].password = newPassword;
                     this.saveUsers(users);
                     this.forgotLoading = false;
+
+                    // Beri tahu admin secara real-time (lihat _setupLiveSync di script.js)
+                    this._tambahNotifikasiUntukAdmin({
+                        tipe: 'akun',
+                        judul: 'Kata Sandi Direset Mandiri',
+                        pesan: `Akun @${username.trim().toLowerCase()} mengganti kata sandinya via halaman Lupa Sandi.`
+                    });
 
                     await Swal.fire({
                         title: 'Kata Sandi Berhasil Diubah! ✅',

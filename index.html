@@ -50,6 +50,10 @@
 
     <div class="flex h-screen overflow-hidden">
 
+        <!-- SIDEBAR BACKDROP (mobile only, dims content behind the drawer) -->
+        <div x-show="sidebarOpen" x-transition.opacity @click="sidebarOpen=false"
+            class="fixed inset-0 bg-black/50 z-40 md:hidden" x-cloak></div>
+
         <!-- SIDEBAR -->
         <aside x-show="sidebarOpen" x-transition:enter="transition ease-out duration-250"
             x-transition:enter-start="-translate-x-full opacity-0" x-transition:enter-end="translate-x-0 opacity-100"
@@ -217,7 +221,7 @@
 
             <!-- TOPBAR -->
             <header
-                class="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 px-5 py-3.5 flex items-center justify-between flex-shrink-0 z-30">
+                class="relative bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 px-5 py-3.5 flex items-center justify-between flex-shrink-0 z-30">
                 <div class="flex items-center gap-4">
                     <button @click="sidebarOpen=!sidebarOpen"
                         class="text-slate-500 hover:text-slate-700 dark:text-slate-400 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
@@ -238,7 +242,7 @@
 
                 <div class="flex items-center gap-2">
                     <!-- Notifikasi -->
-                    <div class="relative dropdown" @click.outside="notificationsOpen=false">
+                    <div class="dropdown sm:relative" @click.outside="notificationsOpen=false">
                         <button @click="toggleNotifications()"
                             class="p-2 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition relative">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -250,7 +254,7 @@
                                 x-text="unreadNotifCount>9?'9+':unreadNotifCount"></span>
                         </button>
                         <div x-show="notificationsOpen" x-transition
-                            class="absolute right-0 mt-2 w-80 card py-2 z-50 max-h-96 overflow-y-auto">
+                            class="absolute left-4 right-4 top-full mt-2 sm:left-auto sm:right-0 sm:top-auto sm:w-80 sm:max-w-[calc(100vw-2rem)] card py-2 z-50 max-h-[70vh] sm:max-h-96 overflow-y-auto">
                             <div class="px-4 py-2 flex items-center justify-between">
                                 <p class="text-xs font-700 text-slate-500 uppercase tracking-wider">Notifikasi</p>
                                 <button x-show="unreadNotifCount>0" @click="tandaiSemuaDibaca()"
@@ -612,7 +616,8 @@
                                             style="font-family:'Plus Jakarta Sans',sans-serif"
                                             x-text="currentDisplayName">
                                         </h1>
-                                        <p class="text-blue-100 text-sm">Sistem Informasi Manajemen Asrama Kabupaten
+                                        <p class="text-blue-100 text-sm">Sistem Informasi Manajemen dan Monitoring
+                                            Asrama Kabupaten
                                             Deiyai · Kota Studi Jayapura</p>
                                     </div>
                                     <div class="text-right hidden sm:block flex-shrink-0">
@@ -969,9 +974,9 @@
                                         <template x-for="n in notifikasiUntukSaya.slice(0,8)" :key="n.id">
                                             <div class="flex items-start gap-3">
                                                 <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                                                    :class="n.tipe==='izin'?'bg-blue-100 dark:bg-blue-900/30':n.tipe==='telat'?'bg-red-100 dark:bg-red-900/30':n.tipe==='pelanggaran'?'bg-rose-100 dark:bg-rose-900/30':n.tipe==='presensi'?'bg-amber-100 dark:bg-amber-900/30':'bg-green-100 dark:bg-green-900/30'">
+                                                    :class="n.tipe==='izin'?'bg-blue-100 dark:bg-blue-900/30':n.tipe==='telat'?'bg-red-100 dark:bg-red-900/30':n.tipe==='pelanggaran'?'bg-rose-100 dark:bg-rose-900/30':n.tipe==='presensi'?'bg-amber-100 dark:bg-amber-900/30':n.tipe==='akun'?'bg-sky-100 dark:bg-sky-900/30':'bg-green-100 dark:bg-green-900/30'">
                                                     <i class="fas text-xs"
-                                                        :class="n.tipe==='izin'?'fa-right-from-bracket text-blue-600':n.tipe==='telat'?'fa-clock text-red-600':n.tipe==='pelanggaran'?'fa-triangle-exclamation text-rose-600':n.tipe==='presensi'?'fa-qrcode text-amber-600':'fa-bullhorn text-green-600'"></i>
+                                                        :class="n.tipe==='izin'?'fa-right-from-bracket text-blue-600':n.tipe==='telat'?'fa-clock text-red-600':n.tipe==='pelanggaran'?'fa-triangle-exclamation text-rose-600':n.tipe==='presensi'?'fa-qrcode text-amber-600':n.tipe==='akun'?'fa-user-plus text-sky-600':'fa-bullhorn text-green-600'"></i>
                                                 </div>
                                                 <div class="min-w-0">
                                                     <p class="text-sm font-500 truncate" x-text="n.judul"></p>
@@ -1186,7 +1191,7 @@
                                     <option value="maintenance">Maintenance</option>
                                 </select>
                             </div>
-                            <div class="grid grid-cols-4 gap-3 text-center">
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
                                 <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-3">
                                     <p class="text-2xl font-800 text-blue-600"
                                         style="font-family:'Plus Jakarta Sans',sans-serif" x-text="totalBarak"></p>
@@ -1408,8 +1413,8 @@
                                     <tr>
                                         <th x-show="currentRole!=='penghuni'">Nama</th>
                                         <th>Tanggal</th>
-                                        <th>Jam Masuk</th>
                                         <th>Jam Keluar</th>
+                                        <th>Jam Masuk</th>
                                         <th>Status</th>
                                         <th>Metode</th>
                                     </tr>
@@ -1422,8 +1427,8 @@
                                             <td class="px-4 py-3"
                                                 x-text="new Date(r.tanggal).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})">
                                             </td>
-                                            <td class="px-4 py-3" x-text="r.jamMasuk||'-'"></td>
                                             <td class="px-4 py-3" x-text="r.jamKeluar||'-'"></td>
+                                            <td class="px-4 py-3" x-text="r.jamMasuk||'-'"></td>
                                             <td class="px-4 py-3"><span class="badge"
                                                     :class="r.statusMasuk==='terlambat'?'badge-penuh':'badge-kosong'"
                                                     x-text="r.statusMasuk==='terlambat'?'Terlambat':'Tepat Waktu'"></span>
@@ -1644,63 +1649,6 @@
                     </div>
                 </section>
 
-                <!-- ═══ MANAJEMEN PENGGUNA ═══ -->
-                <section x-show="currentPage==='pengguna'" x-cloak class="space-y-5 fade-in">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div>
-                            <h3 class="font-800 text-xl" style="font-family:'Plus Jakarta Sans',sans-serif">Manajemen
-                                Pengguna</h3>
-                            <p class="text-sm text-slate-400 mt-0.5" x-text="users.length+' akun terdaftar'"></p>
-                        </div>
-                        <button @click="openAddUserModal()" class="btn btn-primary">
-                            <i class="fas fa-user-plus"></i> Tambah Akun
-                        </button>
-                    </div>
-
-                    <div class="card overflow-x-auto">
-                        <table class="w-full data-table">
-                            <thead>
-                                <tr>
-                                    <th>Username</th>
-                                    <th>Nama</th>
-                                    <th>Role</th>
-                                    <th>Terkait Penghuni</th>
-                                    <th>Status</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <template x-for="u in filteredUsers" :key="u.id">
-                                    <tr class="border-t border-slate-100 dark:border-slate-800">
-                                        <td class="px-4 py-3 font-600" x-text="u.username"></td>
-                                        <td class="px-4 py-3" x-text="u.nama"></td>
-                                        <td class="px-4 py-3"><span class="badge badge-terisi"
-                                                x-text="ROLE_LABEL[u.role]"></span></td>
-                                        <td class="px-4 py-3 text-slate-500"
-                                            x-text="u.nik ? namaPenghuniByNik(u.nik) : '-'"></td>
-                                        <td class="px-4 py-3">
-                                            <button @click="toggleUserActive(u)" class="badge"
-                                                :class="u.active?'badge-aktif':'badge-maintenance'"
-                                                x-text="u.active?'Aktif':'Nonaktif'"
-                                                style="cursor:pointer;border:none;"></button>
-                                        </td>
-                                        <td class="px-4 py-3">
-                                            <div class="flex gap-1.5">
-                                                <button @click="openEditUserModal(u)"
-                                                    class="btn btn-ghost py-1 px-2 text-xs"><i
-                                                        class="fas fa-pen"></i></button>
-                                                <button @click="deleteUser(u)"
-                                                    class="btn btn-ghost py-1 px-2 text-xs text-red-500"><i
-                                                        class="fas fa-trash"></i></button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </template>
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
-
                 <!-- ═══ INVENTARIS ═══ -->
                 <section x-show="currentPage==='inventaris'" x-cloak class="space-y-5 fade-in">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -1718,7 +1666,7 @@
                             Tambah Inventaris
                         </button>
                     </div>
-                    <div class="grid grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div class="card p-5 text-center">
                             <p class="text-3xl font-800 text-emerald-600"
                                 style="font-family:'Plus Jakarta Sans',sans-serif" x-text="persenBaik+'%'"></p>

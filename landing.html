@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="id" x-data="landingApp" :class="{ 'dark': darkMode }">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistem Monitoring dan Manajemen — Asrama Mahasiswa Kabupaten Deiyai, Kota Studi Jayapura</title>
+    <meta name="description"
+        content="SIMASRA adalah sistem informasi monitoring dan manajemen Asrama Mahasiswa Kabupaten Deiyai di Kota Studi Jayapura: data penghuni, kamar, presensi, izin, hingga laporan dalam satu portal terpadu.">
+    <link rel="icon" href="asset/img/android-chrome-192x192.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <!-- style.css menyediakan token .card & .stat-card yang sama dengan dashboard,
+         agar tampilan landing tetap satu bahasa visual dengan index.html -->
+    <link rel="stylesheet" href="asset/css/style.css" />
+    <link rel="stylesheet" href="asset/css/landing.css" />
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+
+<body class="landing-body" x-cloak>
+
+    <!-- ============================== HERO ============================== -->
+    <section class="l-hero">
+        <div class="l-orb l-orb-1"></div>
+        <div class="l-orb l-orb-2"></div>
+        <div class="l-orb l-orb-3"></div>
+
+        <header class="l-header">
+            <div class="l-topbar ">
+                <div class="l-brand">
+                    <div class="l-brand-logos">
+                        <img src="asset/img/logo-login.png" alt="Logo Asrama Deiyai" class="l-logo l-logo-asrama">
+                        <span class="l-logo-divider"></span>
+                        <img src="asset/img/logo-kabupaten.png" alt="Logo Kabupaten Deiyai"
+                            class="l-logo l-logo-kabupaten">
+                    </div>
+                    <div>
+                        <div class="l-brand-title">ASRAMA DEIYAI</div>
+                        <div class="l-brand-sub">Asrama Kab. Deiyai &middot; Kota Studi Jayapura</div>
+                    </div>
+                </div>
+
+                <!-- <div style="position:relative;z-index:10;display:flex;align-items:center;gap:10px;">
+                    <button class="l-icon-btn" @click="toggleDarkMode()"
+                        :title="darkMode ? 'Mode Terang' : 'Mode Gelap'">
+                        <i x-show="!darkMode" class="fas fa-moon"></i>
+                        <i x-show="darkMode" class="fas fa-sun" style="color:#fbbf24"></i>
+                    </button>
+                    <a href="login.html" class="l-cta-primary">
+                        <i class="fas fa-right-to-bracket"></i> Masuk
+                    </a>
+                </div> -->
+            </div>
+
+            <nav class="l-navbar">
+                <div class="l-navbar-inner">
+                    <a href="#tentang"><i class="fas fa-circle-info"></i> Tentang</a>
+                    <a href="#fitur"><i class="fas fa-layer-group"></i> Fitur</a>
+                    <a href="#peran"><i class="fas fa-users-line"></i> Untuk Siapa</a>
+                    <a href="#kontak"><i class="fas fa-headset"></i> Kontak</a>
+
+                </div>
+
+            </nav>
+
+        </header>
+
+        <div class="l-hero-body">
+            <div>
+                <span class="l-eyebrow"><i class="fas fa-house-chimney-window"></i> Sistem Informasi Monitoring dan
+                    Manajemen
+                    Asrama Deiyai</span>
+                <h1 class="l-hero-title">
+                    Rumah kedua bagi mahasiswa<br>
+                    Kabupaten Deiyai di <em>Kota Studi Jayapura</em>
+                </h1>
+                <p class="l-hero-desc">
+                    Sistem Monitoring dan Manajemen membantu Asrama Mahasiswa Kabupaten Deiyai mengelola penghuni,
+                    kamar, presensi,
+                    izin keluar‑masuk, hingga laporan bulanan dalam satu portal — supaya mahasiswa asal
+                    Deiyai yang menempuh studi di Jayapura tetap terpantau, tertib, dan terurus dengan baik.
+                </p>
+                <div class="l-hero-actions">
+                    <a href="login.html" class="l-cta-primary">
+                        <i class="fas fa-right-to-bracket"></i> Masuk ke Sistem
+                    </a>
+                    <a href="login.html?tab=register" class="l-cta-ghost">
+                        <i class="fas fa-user-plus"></i> Daftar sebagai Penghuni
+                    </a>
+                </div>
+
+                <div class="l-hero-stats">
+                    <div>
+                        <div class="l-hero-stat-num"><span x-text="animatedHero.penghuni"></span>+</div>
+                        <div class="l-hero-stat-label">Penghuni Aktif</div>
+                    </div>
+                    <div>
+                        <div class="l-hero-stat-num" x-text="animatedHero.totalKamar"></div>
+                        <div class="l-hero-stat-label">Total Kamar</div>
+                    </div>
+                    <div>
+                        <div class="l-hero-stat-num" x-text="animatedHero.kamarKosong"></div>
+                        <div class="l-hero-stat-label">Kamar Tersedia</div>
+                    </div>
+                    <div>
+                        <div class="l-hero-stat-num"><span x-text="animatedHero.alumni"></span>+</div>
+                        <div class="l-hero-stat-label">Alumni Asrama</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <a href="#tentang" class="l-scroll-cue">
+            <span>Jelajahi Selengkapnya</span>
+            <i class="fas fa-chevron-down"></i>
+        </a>
+    </section>
+
+    <!-- ======================= ASRAMA DALAM ANGKA ======================= -->
+    <section class="l-section l-section-alt" x-ref="statsSection">
+        <div class="l-section-head">
+            <div class="l-kicker">Data Real‑Time</div>
+            <h2 class="l-section-title">Asrama dalam Angka</h2>
+            <p class="l-section-desc">Ringkasan kondisi Asrama Deiyai saat ini, diperbarui langsung dari sistem.</p>
+        </div>
+        <div class="l-stats-grid">
+            <div class="stat-card">
+                <div class="l-stat-icon" style="background:rgba(37,99,235,0.1);color:#2563eb;">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="l-stat-value" x-text="animatedCards.penghuni"></div>
+                <div class="l-stat-label">Penghuni Aktif</div>
+            </div>
+            <div class="stat-card">
+                <div class="l-stat-icon" style="background:rgba(139,92,246,0.1);color:#7c3aed;">
+                    <i class="fas fa-door-closed"></i>
+                </div>
+                <div class="l-stat-value" x-text="animatedCards.totalKamar"></div>
+                <div class="l-stat-label">Total Kamar</div>
+            </div>
+            <div class="stat-card">
+                <div class="l-stat-icon" style="background:rgba(34,197,94,0.12);color:#16a34a;">
+                    <i class="fas fa-door-open"></i>
+                </div>
+                <div class="l-stat-value" x-text="animatedCards.kamarKosong"></div>
+                <div class="l-stat-label">Kamar Tersedia</div>
+            </div>
+            <div class="stat-card">
+                <div class="l-stat-icon" style="background:rgba(249,115,22,0.12);color:#ea580c;">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <div class="l-stat-value" x-text="animatedCards.alumni"></div>
+                <div class="l-stat-label">Alumni Tercatat</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================== TENTANG ============================== -->
+    <section class="l-section" id="tentang">
+        <div class="l-about-grid">
+            <div>
+                <div class="l-kicker">Tentang Kami</div>
+                <h2 class="l-about-title">Menjaga mahasiswa Deiyai tetap dekat dengan rumah, meski jauh di tanah rantau
+                </h2>
+                <p class="l-about-text">
+                    Asrama Mahasiswa Kabupaten Deiyai berada di Kota Studi Jayapura, menjadi tempat tinggal
+                    sekaligus pusat pembinaan bagi putra‑putri Kabupaten Deiyai yang sedang menempuh
+                    pendidikan tinggi. Asrama dikelola langsung oleh Pemerintah Kabupaten Deiyai melalui
+                    Pembina Asrama, dengan pengawasan Pimpinan Daerah.
+                </p>
+                <p class="l-about-text">
+                    Sistem Monitoring dan Manajemen hadir sebagai perpanjangan tangan digital dari pengelolaan asrama
+                    sehari‑hari:
+                    mencatat siapa yang tinggal di kamar mana, memantau kehadiran, mengelola izin keluar‑masuk,
+                    hingga menyusun laporan untuk Pemerintah Kabupaten Deiyai — semuanya transparan dan
+                    dapat diakses sesuai peran masing‑masing.
+                </p>
+                <ul class="l-about-list">
+                    <li><i class="fas fa-circle-check"></i> Dikelola resmi oleh Pemerintah Kabupaten Deiyai</li>
+                    <li><i class="fas fa-circle-check"></i> Berlokasi di Kota Studi Jayapura, Papua</li>
+                    <li><i class="fas fa-circle-check"></i> Data penghuni & kamar terpantau secara digital</li>
+                </ul>
+            </div>
+            <div class="l-about-panel">
+                <div class="l-about-panel-row">
+                    <div class="l-about-panel-icon"><i class="fas fa-location-dot"></i></div>
+                    <div>
+                        <div class="l-about-panel-title">Lokasi Asrama</div>
+                        <div class="l-about-panel-sub">Kota Studi Jayapura, Papua</div>
+                    </div>
+                </div>
+                <div class="l-about-panel-row">
+                    <div class="l-about-panel-icon"><i class="fas fa-building-shield"></i></div>
+                    <div>
+                        <div class="l-about-panel-title">Pengelola</div>
+                        <div class="l-about-panel-sub">Pemerintah Kabupaten Deiyai</div>
+                    </div>
+                </div>
+                <div class="l-about-panel-row">
+                    <div class="l-about-panel-icon"><i class="fas fa-user-graduate"></i></div>
+                    <div>
+                        <div class="l-about-panel-title">Diperuntukkan Bagi</div>
+                        <div class="l-about-panel-sub">Mahasiswa asal Kabupaten Deiyai</div>
+                    </div>
+                </div>
+                <div class="l-about-panel-row">
+                    <div class="l-about-panel-icon"><i class="fas fa-shield-halved"></i></div>
+                    <div>
+                        <div class="l-about-panel-title">Sistem</div>
+                        <div class="l-about-panel-sub">Monitoring dan Manajemen v3.0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================== FITUR ============================== -->
+    <section class="l-section l-section-alt" id="fitur">
+        <div class="l-section-head">
+            <div class="l-kicker">Fitur Sistem</div>
+            <h2 class="l-section-title">Satu Portal untuk Semua Kebutuhan Asrama</h2>
+            <p class="l-section-desc">Fitur yang sama persis dengan yang berjalan di dashboard SIMASRA.</p>
+        </div>
+        <div class="l-feature-grid">
+            <div class="card l-feature-card">
+                <div class="l-feature-icon"><i class="fas fa-users"></i></div>
+                <div class="l-feature-title">Data Penghuni</div>
+                <div class="l-feature-desc">Kelola profil, status, dan riwayat setiap penghuni asrama secara rapi.</div>
+            </div>
+            <div class="card l-feature-card">
+                <div class="l-feature-icon"><i class="fas fa-door-open"></i></div>
+                <div class="l-feature-title">Manajemen Kamar</div>
+                <div class="l-feature-desc">Pantau ketersediaan kamar dan alokasi penghuni per barak & lantai.</div>
+            </div>
+            <div class="card l-feature-card">
+                <div class="l-feature-icon"><i class="fas fa-qrcode"></i></div>
+                <div class="l-feature-title">Presensi QR</div>
+                <div class="l-feature-desc">Absensi harian penghuni lewat pindai kartu anggota berbasis QR.</div>
+            </div>
+            <div class="card l-feature-card">
+                <div class="l-feature-icon"><i class="fas fa-right-left"></i></div>
+                <div class="l-feature-title">Izin Keluar/Masuk</div>
+                <div class="l-feature-desc">Ajukan dan setujui izin keluar‑masuk asrama secara digital.</div>
+            </div>
+            <div class="card l-feature-card">
+                <div class="l-feature-icon"><i class="fas fa-triangle-exclamation"></i></div>
+                <div class="l-feature-title">Pelanggaran & Pembinaan</div>
+                <div class="l-feature-desc">Catatan pelanggaran dan tindak lanjut pembinaan penghuni.</div>
+            </div>
+            <div class="card l-feature-card">
+                <div class="l-feature-icon"><i class="fas fa-calendar-days"></i></div>
+                <div class="l-feature-title">Aktivitas Asrama</div>
+                <div class="l-feature-desc">Agenda dan kegiatan bersama seluruh penghuni asrama.</div>
+            </div>
+            <div class="card l-feature-card">
+                <div class="l-feature-icon"><i class="fas fa-boxes-stacked"></i></div>
+                <div class="l-feature-title">Inventaris</div>
+                <div class="l-feature-desc">Data aset dan barang inventaris milik asrama per ruangan.</div>
+            </div>
+            <div class="card l-feature-card">
+                <div class="l-feature-icon"><i class="fas fa-chart-column"></i></div>
+                <div class="l-feature-title">Laporan</div>
+                <div class="l-feature-desc">Ringkasan & laporan berkala untuk Pembina hingga Pemerintah Kabupaten.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================== UNTUK SIAPA ============================== -->
+    <section class="l-section" id="peran">
+        <div class="l-section-head">
+            <div class="l-kicker">Untuk Siapa</div>
+            <h2 class="l-section-title">Satu Sistem, Empat Peran</h2>
+            <p class="l-section-desc">Setiap peran memiliki akses sesuai tanggung jawabnya masing‑masing.</p>
+        </div>
+        <div class="l-role-grid">
+            <div class="card l-role-card" @click="goLogin(null, 'admin')">
+                <div class="l-role-avatar"><i class="fas fa-user-shield"></i></div>
+                <div class="l-role-name">Admin</div>
+                <div class="l-role-desc">Mengelola seluruh data, pengguna, dan pengaturan sistem asrama.</div>
+                <button type="button" class="l-role-btn">Coba Demo <i class="fas fa-arrow-right"></i></button>
+            </div>
+            <div class="card l-role-card" @click="goLogin(null, 'pembina')">
+                <div class="l-role-avatar"><i class="fas fa-chalkboard-user"></i></div>
+                <div class="l-role-name">Pembina</div>
+                <div class="l-role-desc">Membina, memantau presensi, izin, dan pelanggaran penghuni.</div>
+                <button type="button" class="l-role-btn">Coba Demo <i class="fas fa-arrow-right"></i></button>
+            </div>
+            <div class="card l-role-card" @click="goLogin(null, 'penghuni')">
+                <div class="l-role-avatar"><i class="fas fa-user"></i></div>
+                <div class="l-role-name">Penghuni</div>
+                <div class="l-role-desc">Melihat kartu anggota, presensi, dan mengajukan izin sendiri.</div>
+                <button type="button" class="l-role-btn">Coba Demo <i class="fas fa-arrow-right"></i></button>
+            </div>
+            <div class="card l-role-card" @click="goLogin(null, 'pimpinan')">
+                <div class="l-role-avatar"><i class="fas fa-building-user"></i></div>
+                <div class="l-role-name">Pimpinan</div>
+                <div class="l-role-desc">Memantau ringkasan & laporan asrama dari sisi kebijakan daerah.</div>
+                <button type="button" class="l-role-btn">Coba Demo <i class="fas fa-arrow-right"></i></button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================== CTA BANNER ============================== -->
+    <section class="l-section l-section-alt">
+        <div class="l-cta-banner">
+            <h2 class="l-cta-banner-title">Siap mengelola asrama secara digital?</h2>
+            <p class="l-cta-banner-desc">
+                Masuk jika Anda sudah punya akun, atau daftar sebagai penghuni baru dengan NIK yang
+                terdaftar di admin asrama.
+            </p>
+            <div class="l-cta-banner-actions">
+                <a href="login.html" class="l-cta-primary">
+                    <i class="fas fa-right-to-bracket"></i> Masuk ke Sistem
+                </a>
+                <a href="login.html?tab=register" class="l-cta-ghost">
+                    <i class="fas fa-user-plus"></i> Daftar sebagai Penghuni
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================== FOOTER ============================== -->
+    <footer class="l-footer" id="kontak">
+        <div class="l-footer-grid">
+            <div>
+                <div class="l-footer-brand">
+                    <img src="asset/img/logo-login.png" alt="Logo Asrama Deiyai" class="l-logo"
+                        style="width:34px;height:34px;">
+                    <span class="l-footer-brand-title">ASRAMA DEIYAI</span>
+                </div>
+                <p class="l-footer-desc">
+                    Sistem Informasi Manajemen Asrama Mahasiswa Kabupaten Deiyai di Kota Studi Jayapura.
+                </p>
+            </div>
+            <div>
+                <div class="l-footer-heading">Navigasi</div>
+                <ul class="l-footer-links">
+                    <li><a href="#tentang">Tentang Asrama</a></li>
+                    <li><a href="#fitur">Fitur Sistem</a></li>
+                    <li><a href="#peran">Untuk Siapa</a></li>
+                </ul>
+            </div>
+            <div>
+                <div class="l-footer-heading">Akun</div>
+                <ul class="l-footer-links">
+                    <li><a href="login.html">Masuk ke Sistem</a></li>
+                    <li><a href="login.html?tab=register">Daftar Penghuni</a></li>
+                    <li><a href="login.html?tab=forgot">Lupa Kata Sandi</a></li>
+                </ul>
+            </div>
+            <div>
+                <div class="l-footer-heading">Kontak</div>
+                <div class="l-footer-contact">
+                    <div class="l-footer-contact-row">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>Asrama Kabupaten Deiyai, Kota Studi Jayapura, Papua</span>
+                    </div>
+                    <div class="l-footer-contact-row">
+                        <i class="fab fa-whatsapp"></i>
+                        <a href="https://wa.me/6282199999999?text=Halo%20Admin%20SIMASRA%2C%20saya%20membutuhkan%20bantuan."
+                            target="_blank" rel="noopener">+62 821‑9999‑9999</a>
+                    </div>
+                    <div class="l-footer-contact-row">
+                        <i class="fas fa-envelope"></i>
+                        <a href="mailto:admin.asrama@deiyai.go.id">admin.asrama@deiyai.go.id</a>
+                    </div>
+                    <div class="l-footer-contact-row">
+                        <i class="fas fa-clock"></i>
+                        <span>Senin–Jumat, 08.00–16.00 WIT</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="l-footer-bottom">
+            <span>&copy; <span x-text="year"></span> Sistem Monitoring dan Manajemen — Asrama Kabupaten Deiyai. Seluruh
+                hak cipta
+                dilindungi.</span>
+            <span>Dikelola oleh Pemerintah Kabupaten Deiyai</span>
+        </div>
+    </footer>
+
+    <!-- ============================== FAB ============================== -->
+    <div class="l-fab-wrap">
+        <div class="l-fab-actions" x-show="fabOpen" x-transition.origin.bottom.right @click.outside="fabOpen = false"
+            x-cloak>
+            <a href="https://wa.me/6282199999999?text=Halo%20Admin%20SIMASRA%2C%20saya%20membutuhkan%20bantuan."
+                target="_blank" rel="noopener" class="l-fab-item" title="Chat WhatsApp Admin">
+                <span class="l-fab-item-icon" style="background:#22c55e;"><i class="fab fa-whatsapp"></i></span>
+                <span class="l-fab-item-label">Hubungi Admin</span>
+            </a>
+            <a href="login.html" class="l-fab-item" title="Masuk ke Sistem">
+                <span class="l-fab-item-icon" style="background:#2563eb;"><i class="fas fa-right-to-bracket"></i></span>
+                <span class="l-fab-item-label">Masuk ke Sistem</span>
+            </a>
+            <button type="button" class="l-fab-item" @click="scrollToTop()" title="Kembali ke Atas">
+                <span class="l-fab-item-icon" style="background:#7c3aed;"><i class="fas fa-arrow-up"></i></span>
+                <span class="l-fab-item-label">Kembali ke Atas</span>
+            </button>
+        </div>
+        <button type="button" class="l-fab-main" :class="fabOpen && 'is-open'" @click="fabOpen = !fabOpen"
+            :aria-expanded="fabOpen" aria-label="Menu cepat SIMASRA">
+            <i class="fas fa-plus"></i>
+        </button>
+    </div>
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('landingApp', () => ({
+                darkMode: localStorage.theme === 'dark' ||
+                    (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches),
+                year: new Date().getFullYear(),
+                fabOpen: false,
+
+                // Statistik ringkas — dibaca langsung dari data sistem (localStorage),
+                // dengan angka contoh sebagai fallback bila sistem belum berisi data.
+                stats: { penghuni: 128, totalKamar: 42, kamarKosong: 9, alumni: 340 },
+
+                // Nilai tampilan yang dianimasikan (smooth count‑up dari 0 → nilai akhir).
+                animatedHero: { penghuni: 0, totalKamar: 0, kamarKosong: 0, alumni: 0 },
+                animatedCards: { penghuni: 0, totalKamar: 0, kamarKosong: 0, alumni: 0 },
+
+                init() {
+                    // Integrasi dua arah dengan login.html/index.html: jika sesi login
+                    // masih aktif, lewati landing dan langsung masuk ke dashboard.
+                    if (sessionStorage.getItem('isLoggedIn') === 'true') {
+                        window.location.replace('index.html');
+                        return;
+                    }
+                    this.applyDark();
+                    this.loadStats();
+
+                    this.$nextTick(() => {
+                        // Statistik di hero langsung terlihat saat halaman dibuka.
+                        this.animateCount(this.animatedHero, this.stats, 1400);
+                        // Statistik kartu "Asrama dalam Angka" dianimasikan saat
+                        // section-nya benar‑benar masuk ke layar (scroll‑triggered).
+                        this.observeStatsSection();
+                    });
+                },
+
+                applyDark() {
+                    document.documentElement.classList.toggle('dark', this.darkMode);
+                    localStorage.theme = this.darkMode ? 'dark' : 'light';
+                },
+                toggleDarkMode() { this.darkMode = !this.darkMode; this.applyDark(); },
+
+                loadStats() {
+                    try {
+                        const rawPenghuni = localStorage.getItem('simasra_penghuni');
+                        const rawBarak = localStorage.getItem('simasra_barak');
+                        const penghuni = rawPenghuni ? JSON.parse(rawPenghuni) : [];
+                        const barak = rawBarak ? JSON.parse(rawBarak) : [];
+
+                        if (Array.isArray(penghuni) && penghuni.length) {
+                            this.stats.penghuni = penghuni.filter(p => p.status === 'aktif').length;
+                            this.stats.alumni = penghuni.filter(p => p.status === 'alumni').length;
+                        }
+                        if (Array.isArray(barak) && barak.length) {
+                            const semuaKamar = barak.flatMap(b => Array.isArray(b.daftarKamar) ? b.daftarKamar : []);
+                            if (semuaKamar.length) {
+                                this.stats.totalKamar = semuaKamar.length;
+                                this.stats.kamarKosong = semuaKamar.filter(k => k.status === 'kosong').length;
+                            }
+                        }
+                    } catch {
+                        // Biarkan angka contoh (fallback) bila data tidak dapat dibaca.
+                    }
+                },
+
+                // ── Smooth count‑up: menganimasikan `target` dari 0 menuju nilai akhir
+                // pada `source`, memakai easing easeOutCubic lewat requestAnimationFrame.
+                animateCount(target, source, duration = 1500) {
+                    const keys = Object.keys(source);
+                    const ease = t => 1 - Math.pow(1 - t, 3);
+                    let start = null;
+                    const step = (now) => {
+                        if (start === null) start = now;
+                        const progress = Math.min((now - start) / duration, 1);
+                        const eased = ease(progress);
+                        keys.forEach(k => {
+                            target[k] = Math.round(source[k] * eased);
+                        });
+                        if (progress < 1) requestAnimationFrame(step);
+                        else keys.forEach(k => { target[k] = source[k]; }); // pastikan angka akhir presisi
+                    };
+                    requestAnimationFrame(step);
+                },
+
+                // Memicu animasi count‑up kartu statistik hanya saat section terlihat
+                // di layar, agar animasinya terasa "hidup" ketika pengguna scroll.
+                observeStatsSection() {
+                    const el = this.$refs.statsSection;
+                    if (!el || !('IntersectionObserver' in window)) {
+                        this.animateCount(this.animatedCards, this.stats, 1500);
+                        return;
+                    }
+                    const observer = new IntersectionObserver((entries) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting) {
+                                this.animateCount(this.animatedCards, this.stats, 1500);
+                                observer.disconnect();
+                            }
+                        });
+                    }, { threshold: 0.35 });
+                    observer.observe(el);
+                },
+
+                scrollToTop() {
+                    this.fabOpen = false;
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                },
+
+                // Arahkan ke halaman login; opsional buka tab tertentu atau
+                // langsung jalankan Coba Akun Demo untuk peran yang dipilih.
+                goLogin(tab, demo) {
+                    const params = new URLSearchParams();
+                    if (tab) params.set('tab', tab);
+                    if (demo) params.set('demo', demo);
+                    const qs = params.toString();
+                    window.location.href = 'login.html' + (qs ? ('?' + qs) : '');
+                }
+            }));
+        });
+    </script>
+</body>
+
+
+</html>

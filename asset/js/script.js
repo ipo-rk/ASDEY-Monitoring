@@ -784,6 +784,52 @@ document.addEventListener('alpine:init', () => {
         },
 
         // ══════════════════════════════════════════════
+        // SINKRONISASI REAL-TIME ANTAR TAB/JENDELA
+        // Menangani perubahan yang terjadi di login.html (registrasi mandiri,
+        // lupa sandi) atau di jendela/tab index.html lain, agar dashboard admin
+        // yang sedang terbuka langsung ter-update tanpa perlu memuat ulang.
+        // Catatan: event 'storage' hanya terpicu di tab LAIN dari yang menulis
+        // data, dan hanya berlaku dalam satu browser/perangkat yang sama
+        // (localStorage tidak tersinkronisasi lintas perangkat tanpa backend).
+        // ══════════════════════════════════════════════
+        _setupLiveSync() {
+            window.addEventListener('storage', (e) => {
+                if (!e.key) return;
+                const parseArr = (v) => {
+                    try { const p = JSON.parse(v || '[]'); return Array.isArray(p) ? p : null; }
+                    catch { return null; }
+                };
+
+                if (e.key === this.STORAGE_KEYS.USERS) {
+                    const jumlahSebelumnya = this.users.length;
+                    const fresh = parseArr(e.newValue);
+                    if (fresh) this.users = fresh;
+
+                    // Notifikasi visual instan untuk admin/pembina saat ada pendaftar baru
+                    if (fresh && fresh.length > jumlahSebelumnya && this.currentRole !== 'penghuni' && typeof Swal !== 'undefined') {
+                        Swal.mixin({
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 4000,
+                            timerProgressBar: true
+                        }).fire({ icon: 'info', title: 'Ada pendaftaran akun baru dari halaman Login' });
+                    }
+                }
+
+                if (e.key === this.STORAGE_KEYS.NOTIFIKASI) {
+                    const fresh = parseArr(e.newValue);
+                    if (fresh) this.notifikasi = fresh;
+                }
+
+                if (e.key === this.STORAGE_KEYS.PENGHUNI) {
+                    const fresh = parseArr(e.newValue);
+                    if (fresh) this.penghuni = fresh;
+                }
+            });
+        },
+
+        // ══════════════════════════════════════════════
         // NOTIFIKASI
         // ══════════════════════════════════════════════
         _tambahNotifikasi({ tipe, judul, pesan, untukRole = null, untukNik = null }) {
@@ -810,6 +856,7 @@ document.addEventListener('alpine:init', () => {
             if (n.tipe === 'izin') this.setPage('izin');
             else if (n.tipe === 'pelanggaran') this.setPage('pelanggaran');
             else if (n.tipe === 'presensi' || n.tipe === 'telat') this.setPage('presensi');
+            else if (n.tipe === 'akun') this.setPage('pengguna');
             else if (n.tipe === 'pengumuman') this.setPage('dashboard');
         },
 
@@ -888,6 +935,40 @@ document.addEventListener('alpine:init', () => {
             if (r.ok) this.presensiManualNik = '';
         },
 
+        // Dipanggil setiap kali kamera berhasil membaca kode QR.
+        // 1) Mencatat presensi (check-in / check-out otomatis tergantung data hari ini)
+        // 2) Menampilkan alert SweetAlert yang jelas (berhasil/gagal) — bukan hanya teks kecil
+        // 3) Menjeda (pause) kamera selama alert tampil, lalu melanjutkan (resume) otomatis,
+        //    supaya kode QR yang sama tidak langsung terbaca ulang pada frame berikutnya
+        //    dan penghuni tetap punya kesempatan memindai QR lagi nanti untuk jam pulang (checkout).
+        _handleQrScanResult(nik) {
+            const r = this._catatPresensi(nik, 'qr');
+            this.scanFeedback = { type: r.ok ? 'success' : 'error', text: r.msg };
+
+            // Jeda kamera sejenak agar tidak langsung memindai ulang kode yang sama
+            if (this._qrScannerInstance) {
+                try { this._qrScannerInstance.pause(true); } catch (e) { /* abaikan */ }
+            }
+
+            const judul = r.ok
+                ? (r.type === 'checkin' ? 'Presensi Masuk Berhasil' : 'Presensi Keluar Berhasil')
+                : 'Presensi Gagal';
+
+            Swal.fire({
+                icon: r.ok ? 'success' : 'warning',
+                title: judul,
+                text: r.msg,
+                timer: 2200,
+                showConfirmButton: false
+            }).then(() => {
+                // Lanjutkan pemindaian setelah alert tertutup, siap untuk scan berikutnya
+                // (mis. scan penghuni lain, atau scan penghuni yang sama nanti saat jam pulang)
+                if (this._qrScannerInstance) {
+                    try { this._qrScannerInstance.resume(); } catch (e) { /* abaikan */ }
+                }
+            });
+        },
+
         _startQrScanner(elementId, onSuccess) {
             if (typeof Html5Qrcode === 'undefined') {
                 this.scanFeedback = { type: 'error', text: 'Pustaka pemindai QR gagal dimuat.' };
@@ -943,8 +1024,7 @@ document.addEventListener('alpine:init', () => {
                 text: `Beralih ke ${this.scannerFacingMode === 'user' ? 'Kamera Depan' : 'Kamera Belakang'}...`
             };
             this._startQrScanner(elId, (nik) => {
-                const r = this._catatPresensi(nik, 'qr');
-                this.scanFeedback = { type: r.ok ? 'success' : 'error', text: r.msg };
+                this._handleQrScanResult(nik);
             });
         },
 
@@ -953,8 +1033,7 @@ document.addEventListener('alpine:init', () => {
             this.scanFeedback = null;
             this.$nextTick(() => {
                 this._startQrScanner('qr-reader', (nik) => {
-                    const r = this._catatPresensi(nik, 'qr');
-                    this.scanFeedback = { type: r.ok ? 'success' : 'error', text: r.msg };
+                    this._handleQrScanResult(nik);
                 });
             });
         },
@@ -971,8 +1050,7 @@ document.addEventListener('alpine:init', () => {
             if (this.dashboardScannerActive) {
                 this.$nextTick(() => {
                     this._startQrScanner('qr-reader-dashboard', (nik) => {
-                        const r = this._catatPresensi(nik, 'qr');
-                        this.scanFeedback = { type: r.ok ? 'success' : 'error', text: r.msg };
+                        this._handleQrScanResult(nik);
                     });
                 });
             } else {
@@ -1637,13 +1715,15 @@ document.addEventListener('alpine:init', () => {
         init() {
             const isLoggedIn = sessionStorage.getItem('isLoggedIn');
             if (!isLoggedIn || isLoggedIn !== 'true') {
-                window.location.replace('login.html');
+                // Belum login → arahkan dulu ke landing page (bukan langsung ke form login)
+                window.location.replace('landing.html');
                 return;
             }
             this.loadFromStorage();
             this.loadExtraData();   // muat this.users dulu, agar profil default sesuai akun login
             this.loadUserData();
             this.updateDarkMode();
+            this._setupLiveSync();
 
             // Jika halaman awal tidak diizinkan untuk role ini, alihkan ke dashboard
             if (!this.hasAccess(this.currentPage)) this.currentPage = 'dashboard';
