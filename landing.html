@@ -10,6 +10,10 @@
     <link rel="icon" href="asset/img/android-chrome-192x192.png" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap"
+        rel="stylesheet">
     <!-- style.css menyediakan token .card & .stat-card yang sama dengan dashboard,
          agar tampilan landing tetap satu bahasa visual dengan index.html -->
     <link rel="stylesheet" href="asset/css/style.css" />
@@ -331,6 +335,24 @@
                 <p class="l-footer-desc">
                     Sistem Informasi Manajemen Asrama Mahasiswa Kabupaten Deiyai di Kota Studi Jayapura.
                 </p>
+                <div class="l-footer-social">
+                    <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook"
+                        title="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" aria-label="YouTube"
+                        title="YouTube">
+                        <i class="fab fa-youtube"></i>
+                    </a>
+                    <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram"
+                        title="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="https://x.com" target="_blank" rel="noopener noreferrer" aria-label="X (Twitter)"
+                        title="X">
+                        <i class="fab fa-x-twitter"></i>
+                    </a>
+                </div>
             </div>
             <div>
                 <div class="l-footer-heading">Navigasi</div>
@@ -395,6 +417,14 @@
             <button type="button" class="l-fab-item" @click="scrollToTop()" title="Kembali ke Atas">
                 <span class="l-fab-item-icon" style="background:#7c3aed;"><i class="fas fa-arrow-up"></i></span>
                 <span class="l-fab-item-label">Kembali ke Atas</span>
+            </button>
+            <button type="button" class="l-fab-item" @click="toggleDarkMode()"
+                :title="darkMode ? 'Mode Terang' : 'Mode Gelap'">
+                <span class="l-fab-item-icon" style="background:#f59e0b;">
+                    <i x-show="!darkMode" class="fas fa-moon"></i>
+                    <i x-show="darkMode" class="fas fa-sun"></i>
+                </span>
+                <span class="l-fab-item-label" x-text="darkMode ? 'Mode Terang' : 'Mode Gelap'">Mode Gelap</span>
             </button>
         </div>
         <button type="button" class="l-fab-main" :class="fabOpen && 'is-open'" @click="fabOpen = !fabOpen"

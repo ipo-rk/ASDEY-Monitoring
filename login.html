@@ -492,14 +492,14 @@
                     } catch { /* abaikan jika localStorage tidak tersedia */ }
                 },
 
-                // ── Quick Demo Login ────────────────────────────────────────────
+                // ── Quick Demo Login (Autofill Form) ───────────────────────────
                 quickLogin(role) {
                     const u = this.getUserByRole(role);
                     if (!u) { this.errorMessage = `Akun demo untuk role ${role} tidak ditemukan.`; return; }
                     this.activeTab = 'login';
                     this.form.username = u.username;
                     this.form.password = u.password;
-                    this.handleLogin();
+                    this.errorMessage = '';
                 },
 
                 // ── Login ───────────────────────────────────────────────────────
