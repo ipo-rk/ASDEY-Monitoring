@@ -4,7 +4,7 @@ document.addEventListener('alpine:init', () => {
         // ══════════════════════════════════════════════
         // STATE DASAR & UI
         // ══════════════════════════════════════════════
-        sidebarOpen: window.innerWidth >= 1024,
+        sidebarOpen: window.innerWidth >= 768,
         darkMode: localStorage.theme === 'dark' ||
             (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches),
         currentPage: 'dashboard',
@@ -707,10 +707,11 @@ document.addEventListener('alpine:init', () => {
                 const p = localStorage.getItem(this._profileStorageKey());
                 let parsed = p ? JSON.parse(p) : {};
 
-                // Pastikan jika role penghuni, nama di profile selalu sinkron dengan data penghuni
-                if (this.currentRole === 'penghuni' && this.myPenghuni && this.myPenghuni.nama) {
-                    parsed.name = this.myPenghuni.nama;
-                    if (this.myPenghuni.no_hp) parsed.phone = this.myPenghuni.no_hp;
+                // Pastikan jika role penghuni, nama dan foto di profile selalu sinkron dengan data penghuni
+                if (this.currentRole === 'penghuni' && this.myPenghuni) {
+                    parsed.name = this.myPenghuni.nama || parsed.name || base.name;
+                    parsed.phone = this.myPenghuni.no_hp || '';
+                    parsed.photo = this.myPenghuni.photo || '';
                 } else if (!parsed.name) {
                     parsed.name = base.name;
                 }
@@ -1104,9 +1105,8 @@ document.addEventListener('alpine:init', () => {
 
         get kartuPhoto() {
             if (!this.kartuPenghuni) return '';
-            // Jika kartu yang dibuka adalah akun yang sedang login, gunakan foto profil aktif
-            if (this.kartuPenghuni.nik === this.currentNik && this.userProfile?.photo) {
-                return this.userProfile.photo;
+            if (this.kartuPenghuni.nik === this.currentNik) {
+                return this.userProfile?.photo || this.kartuPenghuni.photo || '';
             }
             return this.kartuPenghuni.photo || '';
         },
@@ -1341,7 +1341,7 @@ document.addEventListener('alpine:init', () => {
                 <head>
                     <meta charset="UTF-8">
                     <title>KTA - ${nama}</title>
-                    <script src="https://cdn.tailwindcss.com"></script>
+                    <link rel="stylesheet" href="asset/css/tailwind-output.css" />
                     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
                     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
                     <style>
@@ -1724,6 +1724,7 @@ document.addEventListener('alpine:init', () => {
             this.loadUserData();
             this.updateDarkMode();
             this._setupLiveSync();
+            this._setupSidebarResponsive();
 
             // Jika halaman awal tidak diizinkan untuk role ini, alihkan ke dashboard
             if (!this.hasAccess(this.currentPage)) this.currentPage = 'dashboard';
@@ -1786,9 +1787,7 @@ document.addEventListener('alpine:init', () => {
             if (this._chartRenderTimer) clearTimeout(this._chartRenderTimer);
             this._chartRenderTimer = setTimeout(() => {
                 this._chartRenderTimer = null;
-                requestAnimationFrame(() => {
-                    this.renderAllCharts();
-                });
+                this.renderAllCharts();
             }, delay);
         },
 
@@ -1953,7 +1952,25 @@ document.addEventListener('alpine:init', () => {
         setPage(page) {
             if (this.currentPage === page) return;
             this.currentPage = page;
-            if (window.innerWidth < 1024) this.sidebarOpen = false;
+            if (window.innerWidth < 768) this.sidebarOpen = false;
+        },
+        // Sinkronkan status sidebar (terbuka/tertutup) dengan breakpoint md (768px)
+        // yang dipakai class "md:static md:translate-x-0" pada <aside>, supaya
+        // perilaku antara mobile (drawer) dan desktop/tablet (statis) selalu konsisten,
+        // termasuk saat jendela di-resize atau tablet diputar orientasinya.
+        _setupSidebarResponsive() {
+            this._sidebarIsDesktop = window.innerWidth >= 768;
+            let resizeTimer;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => {
+                    const isDesktop = window.innerWidth >= 768;
+                    if (isDesktop !== this._sidebarIsDesktop) {
+                        this._sidebarIsDesktop = isDesktop;
+                        this.sidebarOpen = isDesktop;
+                    }
+                }, 120);
+            });
         },
 
         // ══════════════════════════════════════════════
@@ -1976,7 +1993,7 @@ document.addEventListener('alpine:init', () => {
         // ══════════════════════════════════════════════
         openAddModal() {
             this.isEditMode = false;
-            this.form = { nik: '', nama: '', nisn_nim: '', distrik: '', jenjang: 'SMA', tahun_masuk: new Date().getFullYear(), jenis_kelamin: '', no_hp: '', status: 'aktif', kamarSaatIni: null, tanggalKeluar: null };
+            this.form = { nik: '', nama: '', nisn_nim: '', distrik: '', jenjang: 'SMA', tahun_masuk: new Date().getFullYear(), jenis_kelamin: '', no_hp: '', status: 'aktif', photo: '', kamarSaatIni: null, tanggalKeluar: null };
             this.modalOpen = true;
         },
         openEditModal(penghuni) {
@@ -2014,9 +2031,11 @@ document.addEventListener('alpine:init', () => {
                         this.saveExtraData();
                     }
 
-                    // Jika yang sedang login adalah penghuni ini, perbarui nama profil seketika
+                    // Jika yang sedang login adalah penghuni ini, perbarui profil seketika
                     if (this.currentRole === 'penghuni' && this.currentNik === data.nik) {
                         this.userProfile.name = data.nama;
+                        this.userProfile.phone = data.no_hp || this.userProfile.phone || '';
+                        this.userProfile.photo = data.photo || '';
                         this.saveUserData();
                     }
 
@@ -2334,6 +2353,7 @@ document.addEventListener('alpine:init', () => {
                 if (p) {
                     this.userProfile.name = p.nama || '';
                     if (p.no_hp) this.userProfile.phone = p.no_hp;
+                    if (p.photo) this.userProfile.photo = p.photo;
                 } else {
                     const u = this._currentUserRecord();
                     if (u) this.userProfile.name = u.nama || '';
@@ -2350,16 +2370,47 @@ document.addEventListener('alpine:init', () => {
             if (!file?.type.startsWith('image/')) return Swal.fire('Error', 'Hanya file gambar yang diperbolehkan', 'error');
             const reader = new FileReader();
             reader.onload = e => {
-                this.userProfile = { ...this.userProfile, photo: e.target.result };
+                const photo = e.target.result;
+                this.userProfile = { ...this.userProfile, photo };
+                const targetNik = this.currentNik || this._currentUserRecord()?.nik;
+                if (this.currentRole === 'penghuni' && targetNik) {
+                    const pIdx = this.penghuni.findIndex(p => p.nik === targetNik);
+                    if (pIdx !== -1) {
+                        this.penghuni[pIdx].photo = photo;
+                        this.saveToStorage();
+                    }
+                }
                 this.saveUserData();
+            };
+            reader.readAsDataURL(file);
+        },
+
+        uploadPenghuniPhoto(event) {
+            const file = event.target.files[0];
+            if (!file?.type.startsWith('image/')) return Swal.fire('Error', 'Hanya file gambar yang diperbolehkan', 'error');
+            const reader = new FileReader();
+            reader.onload = e => {
+                this.form = { ...this.form, photo: e.target.result };
             };
             reader.readAsDataURL(file);
         },
 
         removePhoto() {
             this.userProfile = { ...this.userProfile, photo: '' };
+            const targetNik = this.currentNik || this._currentUserRecord()?.nik;
+            if (this.currentRole === 'penghuni' && targetNik) {
+                const pIdx = this.penghuni.findIndex(p => p.nik === targetNik);
+                if (pIdx !== -1) {
+                    this.penghuni[pIdx].photo = '';
+                    this.saveToStorage();
+                }
+            }
             this.saveUserData();
             Swal.fire({ icon: 'success', title: 'Foto Profil Dihapus', timer: 1200, showConfirmButton: false });
+        },
+
+        removePenghuniPhoto() {
+            this.form = { ...this.form, photo: '' };
         },
 
         saveProfile() {
@@ -2375,6 +2426,7 @@ document.addEventListener('alpine:init', () => {
                     if (pIdx !== -1) {
                         this.penghuni[pIdx].nama = newName;
                         if (this.userProfile.phone) this.penghuni[pIdx].no_hp = this.userProfile.phone;
+                        this.penghuni[pIdx].photo = this.userProfile.photo || '';
                         this.saveToStorage();
                     }
                 }
@@ -2390,6 +2442,7 @@ document.addEventListener('alpine:init', () => {
                 // 3. Sinkronkan ke kartu anggota jika sedang terbuka
                 if (this.kartuPenghuni) {
                     this.kartuPenghuni.nama = newName;
+                    this.kartuPenghuni.photo = this.userProfile.photo || '';
                 }
 
                 this.saveExtraData();

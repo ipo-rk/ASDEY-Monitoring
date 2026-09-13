@@ -404,6 +404,17 @@
                     { id: 4, username: 'penghuni', password: 'penghuni123', role: 'penghuni', nama: 'Yohanis Duwiri', nik: '9102017501010001', active: true },
                 ],
 
+                // Data penghuni default yang sama dengan seed data dashboard.
+                // Digunakan sebagai fallback di halaman login agar registrasi dapat
+                // memvalidasi NIK bahkan sebelum dashboard pernah dibuka.
+                defaultPenghuni: [
+                    { nik: '9102017501010001', nama: 'Yohanis Duwiri', nisn_nim: '123456789012', distrik: 'Tigi', jenjang: 'SMA', tahun_masuk: 2023, status: 'aktif', jenis_kelamin: 'Laki-laki', no_hp: '0812xxxxxxx', kamarSaatIni: null, tanggalKeluar: null },
+                    { nik: '9102026805020002', nama: 'Maria Kogoya', nisn_nim: '987654321098', distrik: 'Deiyai', jenjang: 'Mahasiswa', tahun_masuk: 2022, status: 'aktif', jenis_kelamin: 'Perempuan', no_hp: '0821xxxxxxx', kamarSaatIni: null, tanggalKeluar: null },
+                    { nik: '9102035508030003', nama: 'Daniel Wonda', nisn_nim: '', distrik: 'Tigi Barat', jenjang: 'SMA', tahun_masuk: 2021, status: 'alumni', jenis_kelamin: 'Laki-laki', no_hp: '', kamarSaatIni: null, tanggalKeluar: '2024-06-15' },
+                    { nik: '9102044409040004', nama: 'Siska Tabuni', nisn_nim: '1122334455', distrik: 'Paniai', jenjang: 'Mahasiswa', tahun_masuk: 2024, status: 'aktif', jenis_kelamin: 'Perempuan', no_hp: '0852xxxxxxx', kamarSaatIni: null, tanggalKeluar: null },
+                    { nik: '9102055210050005', nama: 'Oktovianus Mote', nisn_nim: '', distrik: 'Tigi Timur', jenjang: 'SMA', tahun_masuk: 2024, status: 'aktif', jenis_kelamin: 'Laki-laki', no_hp: '', kamarSaatIni: null, tanggalKeluar: null },
+                ],
+
                 init() {
                     // Integrasi dua arah dengan index.html: jika sesi login masih aktif
                     // (mis. pengguna membuka ulang login.html lewat riwayat/bookmark),
@@ -467,8 +478,9 @@
                 getPenghuni() {
                     try {
                         const raw = localStorage.getItem('simasra_penghuni');
-                        return raw ? JSON.parse(raw) : [];
-                    } catch { return []; }
+                        const arr = raw ? JSON.parse(raw) : null;
+                        return Array.isArray(arr) && arr.length ? arr : this.defaultPenghuni;
+                    } catch { return this.defaultPenghuni; }
                 },
 
                 // ── Notifikasi lintas halaman ────────────────────────────────────

@@ -1,0 +1,69 @@
+<mxfile host="app.diagrams.net" modified="2026-09-13T00:00:00.000Z" agent="Mozilla/5.0" version="24.7.17">
+  <diagram id="desain-ui" name="Desain Antar Muka">
+    <mxGraphModel dx="1800" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1900" pageHeight="1350" math="0" shadow="0">
+      <root>
+        <mxCell id="base"/>
+        <mxCell id="layer1" parent="base"/>
+
+        <mxCell id="title" value="DESAIN ANTAR MUKA (USER INTERFACE)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=22;fontStyle=1;" vertex="1" parent="layer1">
+          <mxGeometry x="160" y="20" width="700" height="40" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="landing" value="Landing Page&#xa;- Hero section&#xa;- Tentang&#xa;- Fitur&#xa;- Untuk Siapa&#xa;- Kontak&#xa;- CTA Login/Register" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=14;fontStyle=1;" vertex="1" parent="layer1">
+          <mxGeometry x="60" y="120" width="270" height="150" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="login" value="Login Page&#xa;- form login&#xa;- tab register&#xa;- tab lupa sandi&#xa;- demo role quick login" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=14;fontStyle=1;" vertex="1" parent="layer1">
+          <mxGeometry x="390" y="120" width="250" height="150" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="dashboard" value="Dashboard Utama&#xa;- sidebar navigation&#xa;- stat cards&#xa;- chart panel&#xa;- data tables&#xa;- modal form" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=14;fontStyle=1;" vertex="1" parent="layer1">
+          <mxGeometry x="700" y="120" width="300" height="170" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="modules" value="Modul Utama&#xa;1. Data Penghuni&#xa;2. Barak/Kamar&#xa;3. Presensi&#xa;4. Izin&#xa;5. Pelanggaran&#xa;6. Aktivitas&#xa;7. Inventaris&#xa;8. Laporan&#xa;9. Profil &amp; Pengaturan" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=14;fontStyle=1;" vertex="1" parent="layer1">
+          <mxGeometry x="80" y="360" width="330" height="220" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="charts" value="Visualisasi Data&#xa;- status penghuni&#xa;- hunian barak&#xa;- kehadiran mingguan&#xa;- distrik &amp; jenjang" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=14;fontStyle=1;" vertex="1" parent="layer1">
+          <mxGeometry x="470" y="390" width="300" height="180" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="tables" value="Tabel &amp; Daftar&#xa;- tabel penghuni&#xa;- tabel barak/kamar&#xa;- tabel inventaris&#xa;- tabel izin &amp; pelanggaran" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=14;fontStyle=1;" vertex="1" parent="layer1">
+          <mxGeometry x="830" y="390" width="310" height="180" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="modal" value="Modal &amp; Komponen Interaktif&#xa;- QR Scanner&#xa;- Kartu Anggota&#xa;- Tambah/Edit Data&#xa;- Profil User&#xa;- Export Dokumen" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=14;fontStyle=1;" vertex="1" parent="layer1">
+          <mxGeometry x="270" y="660" width="360" height="180" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ux" value="Karakteristik UI&#xa;- responsif&#xa;- role based view&#xa;- notifikasi SweetAlert2&#xa;- data real-time&#xa;- photo upload &amp; profile sync" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=14;fontStyle=1;" vertex="1" parent="layer1">
+          <mxGeometry x="720" y="660" width="360" height="180" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="edge1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="layer1" source="landing" target="login">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="layer1" source="login" target="dashboard">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="layer1" source="dashboard" target="modules">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="layer1" source="modules" target="charts">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="layer1" source="charts" target="tables">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="layer1" source="tables" target="modal">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="layer1" source="modal" target="ux">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

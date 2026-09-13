@@ -6,21 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SIMASRA – Dashboard Asrama Kabupaten Deiyai</title>
     <link rel="icon" href="asset/img/android-chrome-192x192.png" />
+    <link rel="stylesheet" href="asset/css/tailwind-output.css" />
     <link rel="stylesheet" href="asset/css/style.css" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#3b82f6',
-                        primarydark: '#1d4ed8'
-                    }
-                }
-            }
-        }
-    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link
         href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
@@ -62,7 +49,8 @@
             class="fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-slate-800 md:static md:translate-x-0 flex flex-col shadow-xl md:shadow-none">
 
             <!-- Brand -->
-            <div class="px-5 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <div
+                class="h-[70px] px-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
                 <div class="flex items-center gap-3">
                     <div
                         class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
@@ -221,7 +209,7 @@
 
             <!-- TOPBAR -->
             <header
-                class="relative bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 px-5 py-3.5 flex items-center justify-between flex-shrink-0 z-30">
+                class="relative h-[70px] bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 px-5 flex items-center justify-between flex-shrink-0 z-30">
                 <div class="flex items-center gap-4">
                     <button @click="sidebarOpen=!sidebarOpen"
                         class="text-slate-500 hover:text-slate-700 dark:text-slate-400 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
@@ -2189,6 +2177,25 @@
                     </div>
                     <div><label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">No. HP /
                             WA</label><input type="tel" x-model="form.no_hp" class="form-input" autocomplete="tel">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Foto
+                            Penghuni</label>
+                        <div class="flex items-center gap-4 flex-wrap">
+                            <div
+                                class="w-20 h-20 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 flex items-center justify-center">
+                                <img x-show="form.photo" :src="form.photo" class="w-full h-full object-cover">
+                                <span x-show="!form.photo" class="text-2xl font-800 text-slate-400">+</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <label class="btn btn-ghost cursor-pointer">
+                                    <input type="file" accept="image/*" class="hidden" @change="uploadPenghuniPhoto">
+                                    Unggah Foto
+                                </label>
+                                <button x-show="form.photo" type="button" @click="removePenghuniPhoto()"
+                                    class="btn btn-ghost text-red-600">Hapus</button>
+                            </div>
+                        </div>
                     </div>
                     <div class="sm:col-span-2"><label
                             class="block text-xs font-600 text-slate-500 uppercase tracking-wider mb-1.5">Status <span

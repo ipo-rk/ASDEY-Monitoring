@@ -1,0 +1,11 @@
+{
+  "name": "simasra-monitoring",
+  "private": true,
+  "scripts": {
+    "build:css": "tailwindcss -i ./asset/css/tailwind-source.css -o ./asset/css/tailwind-output.css --minify",
+    "watch:css": "tailwindcss -i ./asset/css/tailwind-source.css -o ./asset/css/tailwind-output.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
+  }
+}

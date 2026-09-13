@@ -1,0 +1,43 @@
+<mxfile host="app.diagrams.net" modified="2026-09-13T00:00:00.000Z" agent="Mozilla/5.0" version="24.7.17">
+  <diagram id="dfd-level0" name="DFD Level 0">
+    <mxGraphModel dx="1200" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="base"/>
+        <mxCell id="layer1" parent="base"/>
+
+        <mxCell id="title" value="DFD LEVEL 0" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=22;fontStyle=1;" vertex="1" parent="layer1">
+          <mxGeometry x="260" y="20" width="310" height="40" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="pengguna" value="Pengguna" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;fontSize=16;fontStyle=1;" vertex="1" parent="layer1">
+          <mxGeometry x="60" y="180" width="150" height="65" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="simasra" value="SIMASRA System" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=18;fontStyle=1;" vertex="1" parent="layer1">
+          <mxGeometry x="335" y="150" width="240" height="110" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="storage" value="Data Storage&#xa;localStorage" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=15;fontStyle=1;" vertex="1" parent="layer1">
+          <mxGeometry x="700" y="170" width="180" height="95" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="edge1" value="login / register" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="layer1" source="pengguna" target="simasra">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="edge2" value="data penghuni" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="layer1" source="simasra" target="storage">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="edge3" value="laporan" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="layer1" source="simasra" target="pengguna">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="edge4" value="ambil data" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="layer1" source="storage" target="simasra">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

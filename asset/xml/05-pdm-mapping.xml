@@ -1,0 +1,140 @@
+<mxfile host="app.diagrams.net" modified="2026-09-13T00:00:00.000Z" agent="Mozilla/5.0" version="24.7.17">
+  <diagram id="pdm-mapping" name="PDM Mapping">
+    <mxGraphModel dx="1600" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1300" math="0" shadow="0">
+      <root>
+        <mxCell id="base"/>
+        <mxCell id="layer1" parent="base"/>
+
+        <mxCell id="title" value="PDM / MAPPING TABEL (LOCALSTORAGE)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=22;fontStyle=1;" vertex="1" parent="layer1">
+          <mxGeometry x="130" y="20" width="760" height="40" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="entity1" value="Penghuni" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=15;fontStyle=1;" vertex="1" parent="layer1">
+          <mxGeometry x="50" y="120" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="entity2" value="Barak / Kamar" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=15;fontStyle=1;" vertex="1" parent="layer1">
+          <mxGeometry x="50" y="220" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="entity3" value="Presensi" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=15;fontStyle=1;" vertex="1" parent="layer1">
+          <mxGeometry x="50" y="320" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="entity4" value="Izin" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=15;fontStyle=1;" vertex="1" parent="layer1">
+          <mxGeometry x="50" y="420" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="entity5" value="Pelanggaran" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=15;fontStyle=1;" vertex="1" parent="layer1">
+          <mxGeometry x="50" y="520" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="entity6" value="Aktivitas" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=15;fontStyle=1;" vertex="1" parent="layer1">
+          <mxGeometry x="50" y="620" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="entity7" value="Inventaris" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=15;fontStyle=1;" vertex="1" parent="layer1">
+          <mxGeometry x="50" y="720" width="150" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="entity8" value="Users" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=15;fontStyle=1;" vertex="1" parent="layer1">
+          <mxGeometry x="50" y="820" width="150" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="storage1" value="simasra_penghuni" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=14;fontStyle=1;" vertex="1" parent="layer1">
+          <mxGeometry x="360" y="120" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="storage2" value="simasra_barak" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=14;fontStyle=1;" vertex="1" parent="layer1">
+          <mxGeometry x="360" y="220" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="storage3" value="simasra_presensi" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=14;fontStyle=1;" vertex="1" parent="layer1">
+          <mxGeometry x="360" y="320" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="storage4" value="simasra_izin" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=14;fontStyle=1;" vertex="1" parent="layer1">
+          <mxGeometry x="360" y="420" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="storage5" value="simasra_pelanggaran" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=14;fontStyle=1;" vertex="1" parent="layer1">
+          <mxGeometry x="360" y="520" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="storage6" value="simasra_aktivitas" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=14;fontStyle=1;" vertex="1" parent="layer1">
+          <mxGeometry x="360" y="620" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="storage7" value="simasra_inventaris" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=14;fontStyle=1;" vertex="1" parent="layer1">
+          <mxGeometry x="360" y="720" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="storage8" value="simasra_users" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=14;fontStyle=1;" vertex="1" parent="layer1">
+          <mxGeometry x="360" y="820" width="220" height="70" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="desc1" value="Array objek data penghuni" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=12;" vertex="1" parent="layer1">
+          <mxGeometry x="680" y="120" width="230" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="desc2" value="Array objek barak dan kamar" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=12;" vertex="1" parent="layer1">
+          <mxGeometry x="680" y="220" width="230" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="desc3" value="Array data presensi" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=12;" vertex="1" parent="layer1">
+          <mxGeometry x="680" y="320" width="230" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="desc4" value="Array data izin" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=12;" vertex="1" parent="layer1">
+          <mxGeometry x="680" y="420" width="230" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="desc5" value="Array data pelanggaran" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=12;" vertex="1" parent="layer1">
+          <mxGeometry x="680" y="520" width="230" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="desc6" value="Array data aktivitas" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=12;" vertex="1" parent="layer1">
+          <mxGeometry x="680" y="620" width="230" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="desc7" value="Array objek inventaris" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=12;" vertex="1" parent="layer1">
+          <mxGeometry x="680" y="720" width="230" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="desc8" value="Array data akun pengguna" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=12;" vertex="1" parent="layer1">
+          <mxGeometry x="680" y="820" width="230" height="70" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="edge1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="layer1" source="entity1" target="storage1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="layer1" source="entity2" target="storage2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="layer1" source="entity3" target="storage3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="layer1" source="entity4" target="storage4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="layer1" source="entity5" target="storage5">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="layer1" source="entity6" target="storage6">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="layer1" source="entity7" target="storage7">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="layer1" source="entity8" target="storage8">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="edge9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="layer1" source="storage1" target="desc1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="layer1" source="storage2" target="desc2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="layer1" source="storage3" target="desc3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge12" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="layer1" source="storage4" target="desc4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge13" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="layer1" source="storage5" target="desc5">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge14" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="layer1" source="storage6" target="desc6">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="layer1" source="storage7" target="desc7">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge16" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;" parent="layer1" source="storage8" target="desc8">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
