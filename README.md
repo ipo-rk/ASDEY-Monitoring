@@ -1,31 +1,31 @@
-﻿# SIMASRA — Sistem Informasi Monitoring & Manajemen Asrama Mahasiswa Kabupaten Deiyai
+﻿# SIMASRA — Sistem Informasi Monitoring dan Manajemen Asrama
 
-> Versi final dokumen proyek yang disesuaikan dengan isi aktual `index.html`, `landing.html`, `login.html`, dan `asset/js/script.js` pada workspace saat ini.
+> Dokumentasi ini disusun berdasarkan kondisi aktual proyek yang ada di workspace saat ini: halaman landing, halaman login, dashboard utama, dan logika aplikasi di `asset/js/script.js`.
 
 ## 1. Ringkasan Proyek
 
-SIMASRA adalah aplikasi web single-page application (SPA) berbasis browser untuk mengelola operasional Asrama Mahasiswa Kabupaten Deiyai di Kota Studi Jayapura. Aplikasi ini mencakup pengelolaan data penghuni, penempatan kamar/barak, presensi, izin keluar-masuk, pelanggaran, aktivitas asrama, inventaris, laporan, serta pengelolaan akun pengguna.
+SIMASRA adalah aplikasi web berbasis browser untuk mengelola operasional asrama mahasiswa Kabupaten Deiyai di Kota Studi Jayapura. Aplikasi ini mencakup data penghuni, pengelolaan kamar dan barak, presensi, izin keluar masuk, pelanggaran, aktivitas asrama, inventaris, laporan, serta profil dan akses pengguna.
 
-Semua fitur utama berjalan pada sisi klien (`client-side`) menggunakan Alpine.js, Tailwind CSS yang dibangun lokal (`asset/css/tailwind-output.css`), CSS kustom, dan penyimpanan lokal berbasis `localStorage`/`sessionStorage`. Proyek ini tidak memiliki backend atau database server, namun sudah mendukung upload foto penghuni/profil, sinkronisasi data real-time antar tab, serta manajemen dashboard operasional penuh di browser.
+Sistem ini berjalan sepenuhnya di sisi klien menggunakan HTML, CSS, Alpine.js, Tailwind CSS, dan browser storage (`localStorage` dan `sessionStorage`). Proyek ini tidak memiliki backend atau database server, sehingga semua data utama diproses dan disimpan di browser pengguna.
 
 ### Diagram Arsitektur Sistem
 
 ```mermaid
 flowchart LR
-    U[Pengguna] --> L[landing.html]
-    U --> LI[login.html]
-    LI --> D[index.html]
-    D --> S[(localStorage / sessionStorage)]
-    D --> C[Chart.js]
-    D --> E[PDF / Excel Export]
-    D --> P[Upload Foto & Profil]
+    User[Pengguna] --> Landing[landing.html]
+    User --> Login[login.html]
+    Login --> Dashboard[index.html]
+    Dashboard --> Storage[(localStorage / sessionStorage)]
+    Dashboard --> Charts[Chart.js]
+    Dashboard --> Export[Export PDF / Excel]
+    Dashboard --> Upload[Upload Foto]
 ```
 
-### Diagram Alur Utama Sistem
+### Diagram Alur Utama
 
 ```mermaid
 flowchart TD
-    A[Mulai] --> B[Halaman landing/login]
+    A[Mulai] --> B[Landing / Login]
     B --> C{Sudah punya akun?}
     C -- Ya --> D[Login]
     C -- Tidak --> E[Registrasi penghuni]
@@ -37,8 +37,8 @@ flowchart TD
     J --> G
 
     G --> K{Modul dipilih}
-    K --> L[Data penghuni]
-    K --> M[Barak/kamar]
+    K --> L[Penghuni]
+    K --> M[Kamar / Barak]
     K --> N[Presensi]
     K --> O[Izin]
     K --> P[Pelanggaran]
@@ -47,7 +47,7 @@ flowchart TD
     K --> S[Laporan]
     K --> T[Profil & pengaturan]
 
-    L --> U[Simpan ke localStorage]
+    L --> U[Simpan ke storage]
     M --> U
     N --> U
     O --> U
@@ -55,266 +55,111 @@ flowchart TD
     Q --> U
     R --> U
     S --> V[Export PDF / Excel]
-    T --> W[Perbarui foto profil]
-```
-
-### Diagram Hubungan Data Utama
-
-```mermaid
-erDiagram
-    USERS ||--o| PENGHUNI : memiliki_akun
-    PENGHUNI ||--o{ PRESENSI : tercatat
-    PENGHUNI ||--o{ IZIN : mengajukan
-    PENGHUNI ||--o{ PELANGGARAN : menerima
-    PENGHUNI ||--o{ AKTIVITAS : mengikuti
-    PENGHUNI }o--|| KAMAR : menempati
-    BARAK ||--o{ KAMAR : terdiri
-    KAMAR ||--o{ INVENTARIS : menampung
-
-    USERS {
-        int id
-        string username
-        string password
-        string role
-        string nama
-        string nik
-        boolean active
-    }
-
-    PENGHUNI {
-        string nik
-        string nama
-        string nisn_nim
-        string distrik
-        string jenjang
-        int tahun_masuk
-        string jenis_kelamin
-        string no_hp
-        string status
-        string photo
-        object kamarSaatIni
-        string tanggalKeluar
-    }
-
-    BARAK {
-        int id
-        int lantai
-        string sisi
-        int kapasitas
-        int terisi
-        string status
-        string rentangKamar
-        object daftarKamar
-    }
-
-    KAMAR {
-        string nomor
-        string status
-        string[] penghuniList
-        object tanggalMasuk
-        string[] riwayat
-    }
-
-    PRESENSI {
-        string id
-        string nik
-        string tanggal
-        string jamMasuk
-        string jamKeluar
-        string statusMasuk
-    }
-
-    IZIN {
-        string id
-        string nik
-        string tujuan
-        string tanggalKeluar
-        string estimasiKembali
-        string status
-    }
-
-    PELANGGARAN {
-        string id
-        string nik
-        string jenis
-        string deskripsi
-        string status
-    }
-
-    AKTIVITAS {
-        string id
-        string judul
-        string jenis
-        string tanggal
-        string deskripsi
-    }
-
-    INVENTARIS {
-        string id
-        string barak
-        string nomorKamar
-        string jenis
-        int jumlahTotal
-        int baik
-        int rusakRingan
-        int rusakBerat
-        string catatan
-    }
+    T --> W[Perbarui profil]
 ```
 
 ## 2. Teknologi yang Digunakan
 
-| Komponen              | Teknologi / Library                     | Catatan                                                                                                |
-| :-------------------- | :-------------------------------------- | :----------------------------------------------------------------------------------------------------- |
-| UI & State Management | Alpine.js 3.x                           | Dipakai di `landing.html`, `login.html`, dan `index.html`                                              |
-| Styling               | Tailwind CSS (build lokal) + custom CSS | `asset/css/tailwind-output.css`, `asset/css/style.css`, `asset/css/landing.css`, `asset/css/login.css` |
-| Media / Foto          | Data URL gambar (base64)                | Foto penghuni dan foto profil disimpan dalam `localStorage` sebagai data URL gambar                    |
-| Notifikasi & Dialog   | SweetAlert2                             | Digunakan di login dan dashboard                                                                       |
-| QR Generator          | qrcodejs 1.0.0                          | Digunakan untuk kartu anggota                                                                          |
-| QR Scanner            | html5-qrcode 2.3.8                      | Digunakan untuk presensi QR                                                                            |
-| Chart                 | Chart.js 4.4.0                          | Grafik dashboard dan laporan                                                                           |
-| Export Dokumen        | jsPDF + AutoTable + SheetJS             | Export PDF dan Excel                                                                                   |
-| Storage               | localStorage / sessionStorage           | Penyimpanan data utama proyek                                                                          |
-| Sinkronisasi Tab      | `storage` event                         | Sinkronisasi data antar tab browser                                                                    |
+| Komponen       | Teknologi                         | Keterangan                                 |
+| :------------- | :-------------------------------- | :----------------------------------------- |
+| UI & state     | Alpine.js 3.x                     | Digunakan di landing, login, dan dashboard |
+| Styling        | Tailwind CSS + CSS custom         | Dibangun secara lokal lewat `tailwindcss`  |
+| Notifikasi     | SweetAlert2                       | Digunakan untuk dialog dan konfirmasi      |
+| QR generator   | qrcodejs                          | Untuk kartu anggota penghuni               |
+| QR scanner     | html5-qrcode                      | Untuk presensi QR                          |
+| Chart          | Chart.js                          | Grafik dashboard dan laporan               |
+| Export dokumen | jsPDF + AutoTable + SheetJS       | Export PDF dan Excel                       |
+| Storage        | `localStorage` / `sessionStorage` | Menyimpan data utama dan sesi pengguna     |
+| Sinkronisasi   | browser `storage` event           | Sinkronisasi antar tab                     |
 
 ## 3. Struktur File Proyek
 
 ```text
 ASDEY-Monitoring/
-├── index.html                  # Dashboard utama SPA (semua modul operasional)
-├── landing.html                # Landing page publik dan statistik awal
-├── login.html                  # Halaman login, register, dan lupa sandi
-├── README.md                   # Dokumentasi proyek
-├── package.json                # Konfigurasi npm dan script build Tailwind
-├── tailwind.config.js          # Konfigurasi Tailwind CSS build lokal
-├── proposal_simasra.docx       # Dokumen proposal sistem
-├── DFD-Level 1.jpg             # Diagram aliran data level 1
-├── ERD.drawio.svg              # Diagram ERD vektor
-├── ERD.jpg                     # Diagram ERD gambar
+├── index.html                  # Dashboard utama aplikasi
+├── landing.html               # Landing page publik
+├── login.html                 # Halaman login dan registrasi
+├── README.md                  # Dokumentasi proyek
+├── package.json               # Konfigurasi npm dan Tailwind
+├── package-lock.json          # Lock file dependencies
+├── tailwind.config.js         # Konfigurasi Tailwind
+├── proposal_simasra.docx      # Proposal sistem
+├── DFD-Level 1.jpg            # Diagram DFD
+├── ERD.drawio.svg             # Diagram ERD vektor
+├── ERD.jpg                   # Diagram ERD gambar
 ├── asset/
 │   ├── css/
-│   │   ├── landing.css         # Style halaman landing
-│   │   ├── login.css          # Style halaman login
-│   │   ├── style.css          # Style umum dashboard dan komponen UI
-│   │   ├── tailwind-source.css # Entry CSS untuk Tailwind build lokal
-│   │   └── tailwind-output.css # Hasil build Tailwind (generated CSS)
+│   │   ├── landing.css        # Style landing page
+│   │   ├── login.css          # Style login page
+│   │   ├── style.css          # Style umum dashboard
+│   │   ├── tailwind-source.css
+│   │   └── tailwind-output.css
 │   ├── img/
-│   │   ├── bg-login.jpg       # Background halaman login
-│   │   ├── logo-login.png     # Logo ASDEI
-│   │   ├── logo-kabupaten.png # Logo Kabupaten Deiyai
-│   │   ├── site.webmanifest   # Manifest PWA
-│   │   └── ikon favicon / PWA lainnya
-│   └── js/
-│       └── script.js          # Logika utama aplikasi Alpine.js
-├── node_modules/               # Dependency npm hasil install local (opsional)
-└── .git/                      # Metadata repositori lokal
+│   │   ├── logo-login.png
+│   │   ├── logo-kabupaten.png
+│   │   ├── android-chrome-192x192.png
+│   │   ├── site.webmanifest
+│   │   └── ...
+│   ├── js/
+│   │   └── script.js          # Logika inti aplikasi
+│   └── xml/
+│       └── ...                # File XML draw.io
+├── node_modules/              # Dependency lokal
+└── .git/                      # Metadata repositori
 ```
 
-## 4. Role-Based Access Control (RBAC)
+## 4. Fitur yang Tersedia
 
-Akses modul pada dashboard dikendalikan oleh `currentRole` di `asset/js/script.js`.
+### 4.1 Landing Page
 
-| Role       | Akses yang aktif saat ini                                                                                             |
-| :--------- | :-------------------------------------------------------------------------------------------------------------------- |
-| `admin`    | `dashboard`, `penghuni`, `kamar`, `presensi`, `izin`, `pelanggaran`, `aktivitas`, `inventaris`, `laporan`, `pengguna` |
-| `pembina`  | `dashboard`, `penghuni`, `kamar`, `presensi`, `izin`, `pelanggaran`, `aktivitas`, `inventaris`, `laporan`             |
-| `pimpinan` | `dashboard`, `penghuni`, `kamar`, `presensi`, `izin`, `pelanggaran`, `aktivitas`, `inventaris`, `laporan`             |
-| `penghuni` | `dashboard`, `kartu`, `presensi`, `izin`, `pelanggaran`, `aktivitas`                                                  |
+- Hero section dengan branding ASDEI
+- Navigasi antar section utama
+- Statistik penghuni, kamar, dan alumni dari data lokal
+- CTA ke login dan pendaftaran penghuni
 
-Catatan penting:
+### 4.2 Login dan Registrasi
 
-- `admin` satu-satunya role yang memiliki akses ke modul `pengguna`.
-- `pembina` dan `pimpinan` memiliki akses monitoring/operasional, tetapi tidak dapat mengelola akun pengguna.
-- `penghuni` hanya bisa melihat dashboard personal, kartu anggota, presensi, izin, pelanggaran, dan aktivitas.
+- Login menggunakan username dan password
+- Registrasi akun baru untuk penghuni
+- Validasi NIK dengan data penghuni yang sudah ada
+- Reset password untuk akun penghuni
+- Quick demo login untuk role admin, pembina, pimpinan, dan penghuni
 
-## 5. Fitur yang Benar-benar Ada di Proyek
+### 4.3 Dashboard Utama
 
-### 5.1 Landing Page (`landing.html`)
+- Data penghuni: tambah, edit, hapus, status, dan foto
+- Manajemen barak dan kamar
+- Batas maksimal penghuni per kamar: 3 orang
+- Presensi manual dan QR
+- Izin keluar masuk
+- Pelanggaran dan aktivitas asrama
+- Inventaris per kamar/barak
+- Laporan dengan grafik dan export PDF/Excel
+- Profil pengguna dan pengaturan akun
+- Manajemen pengguna untuk role admin
 
-- Hero section dengan branding ASDEI.
-- Navigasi antar section (`Tentang`, `Fitur`, `Untuk Siapa`, `Kontak`).
-- Statistik ringkas yang dibaca dari `localStorage` (`simasra_penghuni`, `simasra_barak`).
-- CTA ke `login.html` dan `login.html?tab=register`.
-- FAB (floating action button) untuk navigasi cepat.
-- Animasi count-up untuk statistik landing page.
+## 5. Role Access
 
-### 5.2 Login / Register / Lupa Sandi (`login.html`)
+Akses fitur diatur berdasarkan role aktif pada script aplikasi.
 
-- Form login dengan remember-me.
-- Tab daftar akun baru (registrasi penghuni).
-- Validasi NIK terhadap data penghuni yang sudah ada di `simasra_penghuni`.
-- Verifikasi akun penghuni untuk reset password via lupa sandi.
-- Akun staf (`admin`, `pembina`, `pimpinan`) tidak bisa reset sandi melalui form lupa sandi; harus melalui admin.
-- Quick demo login untuk keempat role.
-- Integrasi dengan `?tab=register`, `?tab=forgot`, dan `?demo=role`.
+| Role       | Akses                                                                                             |
+| :--------- | :------------------------------------------------------------------------------------------------ |
+| `admin`    | dashboard, penghuni, kamar, presensi, izin, pelanggaran, aktivitas, inventaris, laporan, pengguna |
+| `pembina`  | dashboard, penghuni, kamar, presensi, izin, pelanggaran, aktivitas, inventaris, laporan           |
+| `pimpinan` | dashboard, penghuni, kamar, presensi, izin, pelanggaran, aktivitas, inventaris, laporan           |
+| `penghuni` | dashboard, kartu, presensi, izin, pelanggaran, aktivitas                                          |
 
-### 5.3 Dashboard Utama (`index.html` + `asset/js/script.js`)
+Catatan:
 
-#### A. Data Penghuni
-
-- CRUD penghuni.
-- Status penghuni: `aktif`, `keluar`, `alumni`.
-- Field foto penghuni (`photo`) yang bisa diunggah melalui modal tambah/edit.
-- Data linker user ke NIK untuk sinkronisasi nama akun.
-- Riwayat kamar penghuni.
-
-#### B. Manajemen Barak & Kamar
-
-- Struktur barak dan kamar berbasis array.
-- Multi-penghuni per kamar (`penghuniList`) dengan batas maksimal `MAX_PENGHUNI_PER_KAMAR = 3`.
-- Status kamar: `kosong`, `terisi_sebagian`, `penuh`.
-- Assignment penghuni ke kamar dan penjelasan slot tersedia.
-
-#### C. Presensi
-
-- Presensi manual via form NIK.
-- Presensi QR via `html5-qrcode`.
-- Check-in/check-out otomatis per hari.
-- Status presensi: `tepat_waktu`, `terlambat`.
-
-#### D. Izin Keluar/Masuk
-
-- Pengajuan izin oleh penghuni.
-- Status izin: `menunggu`, `disetujui`, `ditolak`.
-- Notifikasi izin dan daftar history izin.
-
-#### E. Pelanggaran & Aktivitas
-
-- Pencatatan pelanggaran dan pembinaan.
-- Pencatatan aktivitas asrama.
-- Filter berdasarkan status dan jenis kegiatan.
-
-#### F. Inventaris
-
-- Inventarisasi barang per barak/ruangan.
-- Statistik `Baik`, `Rusak Ringan`, `Rusak Berat`.
-
-#### G. Laporan & Charts
-
-- Grafik status penghuni.
-- Grafik hunian barak.
-- Grafik kehadiran mingguan.
-- Laporan distrik dan jenjang.
-- Export PDF dan Excel.
-
-#### H. Manajemen Pengguna
-
-- CRUD akun pengguna.
-- Role: `admin`, `pembina`, `pimpinan`, `penghuni`.
-- Sinkronisasi nama akun dengan data penghuni berdasarkan NIK.
-
-#### I. Profil & Pengaturan
-
-- Profil pengguna per akun (`userProfile` keyed per username).
-- Pengaturan pengguna disimpan secara terpisah per akun.
+- Hanya `admin` yang dapat mengelola modul pengguna.
+- `pembina` dan `pimpinan` bersifat monitoring/operasional.
+- `penghuni` hanya dapat melihat data yang relevan dengan dirinya.
 
 ## 6. Data dan Storage
 
-Proyek ini belum menggunakan backend. Semua data utama disimpan di browser melalui `localStorage` dan `sessionStorage`.
+Proyek tidak menggunakan backend, jadi seluruh data utama disimpan di browser dengan kunci berikut:
 
-### Storage Keys Utama
-
-- `simasra_penghuni` — menyimpan data penghuni termasuk `photo` (data URL gambar)
+- `simasra_penghuni`
 - `simasra_barak`
 - `simasra_inventaris`
 - `simasra_presensi`
@@ -323,85 +168,75 @@ Proyek ini belum menggunakan backend. Semua data utama disimpan di browser melal
 - `simasra_aktivitas`
 - `simasra_users`
 - `simasra_notifikasi`
-- `simasra_user_profile::username` — menyimpan foto profil dan pengaturan per akun
+- `simasra_user_profile::username`
 - `simasra_user_settings::username`
 
-### Session Keys
+Session login disimpan pada key seperti:
 
-- `isLoggedIn`
 - `loggedInRole`
 - `loggedInUsername`
 - `loggedInUserId`
 - `loggedInNik`
+- `isLoggedIn`
 
-## 7. Akun Demo yang Tersedia
+## 7. Akun Demo Default
 
-Akun demo yang otomatis dipakai saat storage belum ada adalah:
+Akun default yang dipetakan di aplikasi adalah:
 
 | Role       | Username   | Password      | Keterangan                                   |
 | :--------- | :--------- | :------------ | :------------------------------------------- |
-| `admin`    | `admin`    | `admin123`    | Full control                                 |
-| `pembina`  | `pembina`  | `pembina123`  | Monitoring & operasional                     |
+| `admin`    | `admin`    | `admin123`    | Full access                                  |
+| `pembina`  | `pembina`  | `pembina123`  | Monitoring operasional                       |
 | `pimpinan` | `pimpinan` | `pimpinan123` | Monitoring & laporan                         |
 | `penghuni` | `penghuni` | `penghuni123` | Penghuni aktif dengan NIK `9102017501010001` |
 
-Catatan:
-
-- `login.html` juga menyediakan tombol quick demo yang otomatis mengisi form tanpa login instan.
-- `landing.html` mendukung parameter `?demo=admin|pembina|penghuni|pimpinan` untuk route cepat ke login demo.
-
 ## 8. Cara Menjalankan Proyek
 
-Karena ini adalah aplikasi client-side, Anda perlu menyiapkan dependency lokal terlebih dahulu agar Tailwind CSS dapat dibangun dan file `asset/css/tailwind-output.css` tersedia.
-
-### Opsi 1 — Jalankan dengan Local Web Server (disarankan)
-
-Sebelum membuka halaman, jalankan build Tailwind sekali jika file `asset/css/tailwind-output.css` belum ada atau sudah berubah:
+### Persiapan awal
 
 ```bash
 npm install
 npm run build:css
+```
+
+### Jalankan lokal server
+
+```bash
 python -m http.server 8080
 ```
 
 Lalu buka:
 
 - `http://localhost:8080/landing.html`
-- atau `http://localhost:8080/login.html`
+- `http://localhost:8080/login.html`
+- `http://localhost:8080/index.html`
 
-### Opsi 2 — Buka Langsung di Browser
+## 9. Catatan Teknis
 
-Bisa dibuka langsung melalui file HTML dengan browser, namun server lokal lebih disarankan khususnya untuk fungsi kamera QR dan performa yang lebih konsisten.
+1. Proyek ini merupakan aplikasi prototype/browser-based, bukan sistem produksi dengan API backend.
+2. Data disimpan di browser masing-masing pengguna dan tidak bersifat terpusat.
+3. Login dan dashboard saling terhubung lewat `sessionStorage` dan `storage` event.
+4. `asset/js/script.js` memuat data awal jika storage kosong, termasuk akun demo dan data awal asrama.
+5. `MAX_PENGHUNI_PER_KAMAR` saat ini diatur ke `3`.
+6. File `tailwind-output.css` dibuat melalui build lokal; update styling dapat dilakukan dengan perintah `npm run build:css`.
 
-## 9. Catatan Teknis yang Penting
+## 10. Audit Akhir
 
-1. Proyek ini berfungsi sepenuhnya di browser dan tidak memiliki backend autentikasi atau API.
-2. Data disimpan di browser masing-masing pengguna; bukan basis data shared antar perangkat.
-3. `login.html` dan `index.html` saling terhubung melalui `sessionStorage` dan storage event.
-4. `landing.html` membaca data real-time dari `localStorage` untuk menampilkan angka statistik.
-5. `asset/js/script.js` memuat data awal (`resetInitialData`) bila `simasra_penghuni` dan `simasra_barak` masih kosong.
-6. Nilai `MAX_PENGHUNI_PER_KAMAR` saat ini ditetapkan `3` pada script.
-7. Kode memperkenalkan migrasi otomatis untuk data kamar lama ke struktur `penghuniList` baru.
+Berdasarkan audit terhadap file proyek saat ini:
 
-## 10. Audit Kode Aktual
+- Struktur halaman utama sudah konsisten antara `landing.html`, `login.html`, dan `index.html`.
+- Fitur utama yang ada sesuai dengan logika di `asset/js/script.js`.
+- Role access dan akun demo sudah konsisten dengan file script.
+- Validasi JavaScript pada `asset/js/script.js` telah berhasil dengan perintah `node --check asset/js/script.js` dan exit code `0`.
 
-Status audit terhadap file yang ada saat ini:
+## 11. Keterbatasan Sistem
 
-- HTML pages (`landing.html`, `login.html`, `index.html`) terstruktur dengan benar dan memiliki konsistensi navigasi.
-- `login.html` sesuai dengan fungsi `quickLogin`, `handleLogin`, `handleRegister`, dan `handleForgotVerify`.
-- `index.html` memiliki modal dan elemen yang dipakai oleh `asset/js/script.js`, termasuk scanner QR, kartu anggota, dan chart canvas.
-- `asset/js/script.js` mengimplementasikan CRUD utama, RBAC, filter, statistik, QR scanner, export PDF/Excel, dan live sync.
-- Akses role sudah konsisten dengan `ROLE_ACCESS` di script.
-
-## 11. Rekomendasi Masa Depan
-
-1. Migrasi dari `localStorage` ke backend API (misalnya Laravel, Express, atau backend lainnya) untuk data yang shared dan lebih aman.
-2. Enkripsi password di server-side jika proyek dijadikan sistem produksi.
-3. Tambahkan service worker agar landing page dan dashboard bisa menjadi PWA yang lebih stabil secara offline.
-4. Menyusun unit test untuk logika bisnis seperti presensi, izin, dan validasi role.
+- Belum ada backend/API untuk autentikasi, data terpusat, dan keamanan tingkat produksi.
+- Password tidak dienkripsi di sisi server karena aplikasi ini masih berbasis browser-only.
+- Data bersifat lokal di mesin pengguna, sehingga tidak cocok untuk use case multi-user real-time skala besar.
 
 ## 12. Penutup
 
-SIMASRA saat ini merupakan prototipe aplikasi web monitoring dan manajemen asrama yang berjalan sepenuhnya di sisi klien, dengan fokus pada fungsionalitas operasional, pengelolaan data, dan pengalaman pengguna. Proyek ini sudah cukup lengkap untuk demonstrasi, evaluasi fitur, dan dokumen portofolio, namun masih memerlukan backend dan keamanan yang lebih kuat jika akan dipakai secara operasional nyata.
+SIMASRA adalah prototype sistem informasi manajemen asrama yang berfungsi dengan baik untuk kebutuhan demonstrasi, pengujian fitur, dan dokumentasi akademik. Aplikasi ini sudah cukup layak untuk demo operasional dasar, namun untuk penggunaan nyata dan skala produksi, diperlukan pengembangan ke backend yang aman dan data yang terpusat.
 
 _Hak Cipta © 2026 — Asrama Mahasiswa Kabupaten Deiyai, Kota Studi Jayapura._
