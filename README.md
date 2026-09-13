@@ -62,12 +62,12 @@ flowchart TD
 
 ```mermaid
 erDiagram
-    USERS ||--o| PENGHUNI : terhubung
-    PENGHUNI ||--o{ PRESENSI : memiliki
+    USERS ||--o| PENGHUNI : memiliki_akun
+    PENGHUNI ||--o{ PRESENSI : tercatat
     PENGHUNI ||--o{ IZIN : mengajukan
-    PENGHUNI ||--o{ PELANGGARAN : memiliki
-    PENGHUNI ||--o{ AKTIVITAS : terlibat
-    PENGHUNI }o--|| KAMAR : ditempatkan
+    PENGHUNI ||--o{ PELANGGARAN : menerima
+    PENGHUNI ||--o{ AKTIVITAS : mengikuti
+    PENGHUNI }o--|| KAMAR : menempati
     BARAK ||--o{ KAMAR : terdiri
     KAMAR ||--o{ INVENTARIS : menampung
 
@@ -87,14 +87,78 @@ erDiagram
         string nisn_nim
         string distrik
         string jenjang
+        int tahun_masuk
+        string jenis_kelamin
+        string no_hp
         string status
         string photo
+        object kamarSaatIni
+        string tanggalKeluar
+    }
+
+    BARAK {
+        int id
+        int lantai
+        string sisi
+        int kapasitas
+        int terisi
+        string status
+        string rentangKamar
+        object daftarKamar
     }
 
     KAMAR {
         string nomor
         string status
         string[] penghuniList
+        object tanggalMasuk
+        string[] riwayat
+    }
+
+    PRESENSI {
+        string id
+        string nik
+        string tanggal
+        string jamMasuk
+        string jamKeluar
+        string statusMasuk
+    }
+
+    IZIN {
+        string id
+        string nik
+        string tujuan
+        string tanggalKeluar
+        string estimasiKembali
+        string status
+    }
+
+    PELANGGARAN {
+        string id
+        string nik
+        string jenis
+        string deskripsi
+        string status
+    }
+
+    AKTIVITAS {
+        string id
+        string judul
+        string jenis
+        string tanggal
+        string deskripsi
+    }
+
+    INVENTARIS {
+        string id
+        string barak
+        string nomorKamar
+        string jenis
+        int jumlahTotal
+        int baik
+        int rusakRingan
+        int rusakBerat
+        string catatan
     }
 ```
 

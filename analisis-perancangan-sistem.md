@@ -182,7 +182,15 @@ Karena sistem tidak menggunakan database relasional, ERD ini disajikan dalam ben
 
 ```mermaid
 erDiagram
-    USERS ||--o| PENGHUNI : terhubung
+    USERS ||--o| PENGHUNI : memiliki_akun
+    PENGHUNI ||--o{ PRESENSI : tercatat
+    PENGHUNI ||--o{ IZIN : mengajukan
+    PENGHUNI ||--o{ PELANGGARAN : menerima
+    PENGHUNI ||--o{ AKTIVITAS : mengikuti
+    PENGHUNI }o--|| KAMAR : menempati
+    BARAK ||--o{ KAMAR : terdiri
+    KAMAR ||--o{ INVENTARIS : menampung
+
     USERS {
         int id
         string username
@@ -192,15 +200,6 @@ erDiagram
         string nik
         boolean active
     }
-
-    PENGHUNI ||--o{ PRESENSI : memiliki
-    PENGHUNI ||--o{ IZIN : mengajukan
-    PENGHUNI ||--o{ PELANGGARAN : memiliki
-    PENGHUNI ||--o{ AKTIVITAS : terlibat
-    PENGHUNI }o--|| KAMAR : ditempatkan
-
-    BARAK ||--o{ KAMAR : terdiri
-    KAMAR ||--o{ INVENTARIS : menampung
 
     PENGHUNI {
         string nik
@@ -213,6 +212,7 @@ erDiagram
         string no_hp
         string status
         string photo
+        object kamarSaatIni
         string tanggalKeluar
     }
 
@@ -224,12 +224,14 @@ erDiagram
         int terisi
         string status
         string rentangKamar
+        object daftarKamar
     }
 
     KAMAR {
         string nomor
         string status
         string[] penghuniList
+        object tanggalMasuk
         string[] riwayat
     }
 
