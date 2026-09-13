@@ -21,6 +21,83 @@ flowchart LR
     D --> P[Upload Foto & Profil]
 ```
 
+### Diagram Alur Utama Sistem
+
+```mermaid
+flowchart TD
+    A[Mulai] --> B[Halaman landing/login]
+    B --> C{Sudah punya akun?}
+    C -- Ya --> D[Login]
+    C -- Tidak --> E[Registrasi penghuni]
+    D --> F{Role valid?}
+    F -- Ya --> G[Dashboard sesuai role]
+    F -- Tidak --> H[Tampilkan error login]
+    E --> I[Validasi NIK]
+    I --> J[Buat akun baru]
+    J --> G
+
+    G --> K{Modul dipilih}
+    K --> L[Data penghuni]
+    K --> M[Barak/kamar]
+    K --> N[Presensi]
+    K --> O[Izin]
+    K --> P[Pelanggaran]
+    K --> Q[Aktivitas]
+    K --> R[Inventaris]
+    K --> S[Laporan]
+    K --> T[Profil & pengaturan]
+
+    L --> U[Simpan ke localStorage]
+    M --> U
+    N --> U
+    O --> U
+    P --> U
+    Q --> U
+    R --> U
+    S --> V[Export PDF / Excel]
+    T --> W[Perbarui foto profil]
+```
+
+### Diagram Hubungan Data Utama
+
+```mermaid
+erDiagram
+    USERS ||--o| PENGHUNI : terhubung
+    PENGHUNI ||--o{ PRESENSI : memiliki
+    PENGHUNI ||--o{ IZIN : mengajukan
+    PENGHUNI ||--o{ PELANGGARAN : memiliki
+    PENGHUNI ||--o{ AKTIVITAS : terlibat
+    PENGHUNI }o--|| KAMAR : ditempatkan
+    BARAK ||--o{ KAMAR : terdiri
+    KAMAR ||--o{ INVENTARIS : menampung
+
+    USERS {
+        int id
+        string username
+        string password
+        string role
+        string nama
+        string nik
+        boolean active
+    }
+
+    PENGHUNI {
+        string nik
+        string nama
+        string nisn_nim
+        string distrik
+        string jenjang
+        string status
+        string photo
+    }
+
+    KAMAR {
+        string nomor
+        string status
+        string[] penghuniList
+    }
+```
+
 ## 2. Teknologi yang Digunakan
 
 | Komponen              | Teknologi / Library                     | Catatan                                                                                                |
